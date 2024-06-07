@@ -11,8 +11,6 @@ def set_aes_key(key: bytes) -> None:
 
 def decrypt_data(encrypted_password_base64: str, iv_base64: str):
     """解密前端传来的数据"""
-    print(encrypted_password_base64)
-    print(iv_base64)
     encrypted_password: bytes = base64.b64decode(encrypted_password_base64)
     iv: bytes = base64.b64decode(iv_base64)
     
@@ -23,3 +21,6 @@ def decrypt_data(encrypted_password_base64: str, iv_base64: str):
     decrypted_password: any = decryptor.update(encrypted_password) + decryptor.finalize()
     
     return decrypted_password.decode('utf-8')
+
+def crypt_data(data: str) -> bytes:
+    return data
