@@ -71,9 +71,12 @@ def userOperate() -> Dict[str, Any]:
 
             success: bool = insertFactory(insertData=insertData)
 
-            print(success)
-            statusCode: int = 200
-            responseMessage: str = 'Register Successful!'
+            if success == True:
+                statusCode: int = 200
+                responseMessage: str = 'Register Successful!'
+            else:
+                statusCode: int = 401
+                responseMessage: str = 'Register Fail!'
         else:
             statusCode: int = 401
             responseMessage: str = 'The passwords you entered twice do not match!'
