@@ -1,6 +1,7 @@
 from typing import Dict, Any, Tuple
 
-from ..config import UserOrm
+from datetime import datetime
+# from ..config import UserOrm
 
 def insertFactory(insertData: Dict[str, Any]) -> bool:
     '''
@@ -12,16 +13,24 @@ def insertFactory(insertData: Dict[str, Any]) -> bool:
     tableName: str = insertData['table']
     tempInsert: Dict[str, Any] = insertData['data'][0]
     # userOrm: object = UserOrm(tempInsert)
-    # realInsert: Dict[str, Any] = userOrm.getUserOrm()
+    realInsert: Dict[str, Any] = getUserOrm(tempInsert)
 
-    # columnsName: str = ','.join(realInsert.keys())
-    # dataTuple: Tuple[str] = tuple(realInsert.values())
+    columnsName: str = ','.join(realInsert.keys())
+    dataTuple: Tuple[str] = tuple(realInsert.values())
 
     # # 构造插入语句的值部分，使用？作为占位符
-    # placeholders: str = ','.join(['?'] * len(realInsert))
+    placeholders: str = ','.join(['?'] * len(realInsert))
 
-    # sql: str = f'INSERT INTO {tableName} ({columnsName}) VALUES ({placeholders})'
+    sql: str = f'INSERT INTO {tableName} ({columnsName}) VALUES ({placeholders})'
 
-    sql: str = ''
+    return True
 
-    return sql
+def getUserOrm(insertData: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            'username': insertData['email'],
+            'email': insertData['email'],
+            'phone': insertData['phone'],
+            'password': insertData['password'],
+            'insert_time': str(datetime.now()),
+            'update_time': ''
+        }
