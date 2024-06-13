@@ -2,15 +2,16 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from ..utils.CryptUtils import decrypt_data, crypt_data
-from ..utils.DbOperatorFactory import insertFactory
+from ..utils.DbOperatorFactory import insertFactory, selectFactory
 
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 users: object = Blueprint('user', __name__)
 
 USERS = {
     # hashlib.sha256("admin".encode()).hexdigest(): hashlib.sha256("password".encode()).hexdigest(),
-    "admin": "password"
+    "admin": "password",
+    "id": 1
 }
 
 @users.route('/user', methods=['POST', 'PUT'])
@@ -25,10 +26,12 @@ def userOperate() -> Dict[str, Any]:
 
         try:
             if encrypted_password_base64 == stored_password:
+                userId: int = USERS.get('id')
                 token: str = create_access_token(identity=userName)
                 statusCode: int = 200
                 responseMessage: str = 'Login Successful!'
             else:
+                userId: int = ''
                 token: str = ''
                 statusCode: int = 401
                 responseMessage: str = 'Login Fail!'
@@ -38,6 +41,7 @@ def userOperate() -> Dict[str, Any]:
             responseMessage: str = str(e)
 
         return jsonify({
+            'id': userId,
             'token': token,
             'status': statusCode,
             'data': [{
@@ -91,13 +95,31 @@ def userOperate() -> Dict[str, Any]:
 
 @users.route('/user', methods=['GET'])
 @jwt_required()
-def getUserId() -> Dict[str, Any]:
+def getUserInfo() -> Dict[str, Any]:
     current_user: any = get_jwt_identity()
+    '''
+    查询数据库中用户项目表 -> user_id被作为查询条件
+    数据获取以后形成数组json返回
+    '''
+    userId: int = request.args.get('userId')
+
+    # 构造查询对象
+    selectData: Dict[str, Any] = {
+        'table': 'Programs',
+        'field': [
+
+        ],
+        'filter': {
+            'userId': userId
+        }
+    }
+
+    # 直接将responseData构造成List[Dict[str, Any]]的形式
+    responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
 
     return jsonify({
+            'id': userId,
+            'user': current_user,
             'status': 200,
-            'data': [{
-                'token': current_user,
-                'userId': 1
-            }]
+            'data': responseData
         })
