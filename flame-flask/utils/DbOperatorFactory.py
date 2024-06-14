@@ -56,7 +56,12 @@ def selectFactory(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     # 执行查询
 
-    pass
+    # 构建临时返回值
+    return [
+        {'name': '第一个项目', 'pv': 100, 'uv': 200},
+        {'name': '第二个项目', 'pv': 200, 'uv': 300},
+        {'name': '第三个项目', 'pv': 300, 'uv': 400}
+    ]
 
 def getUserOrm(insertData: Dict[str, Any]) -> Dict[str, Any]:
     return {
