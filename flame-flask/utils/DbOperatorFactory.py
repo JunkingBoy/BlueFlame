@@ -58,9 +58,25 @@ def selectFactory(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     # 构建临时返回值
     return [
-        {'name': '第一个项目', 'pv': 100, 'uv': 200},
-        {'name': '第二个项目', 'pv': 200, 'uv': 300},
-        {'name': '第三个项目', 'pv': 300, 'uv': 400}
+        {'datetime': '2024-01-01', 'finishBug': 100, 'allBug': 200, 'amt': 2400},
+        {'datetime': '2024-01-02', 'finishBug': 200, 'allBug': 300, 'amt': 2210},
+        {'datetime': '2024-01-03', 'finishBug': 300, 'allBug': 400, 'amt': 2290},
+        {'datetime': '2024-01-04', 'finishBug': 400, 'allBug': 500, 'amt': 2000},
+        {'datetime': '2024-01-05', 'finishBug': 500, 'allBug': 600, 'amt': 2181},
+        {'datetime': '2024-01-06', 'finishBug': 600, 'allBug': 700, 'amt': 2500},
+        {'datetime': '2024-01-07', 'finishBug': 700, 'allBug': 800, 'amt': 2100},
+        {'datetime': '2024-01-08', 'finishBug': 800, 'allBug': 900, 'amt': 2200},
+    ]
+
+def tempSelect(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [
+        {'programName': '我的世界', 'allBug': 500, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        {'programName': '你的世界', 'allBug': 600, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        {'programName': '他的世界', 'allBug': 700, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        {'programName': '她的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        # {'programName': '它的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        # {'programName': '塌的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        # {'programName': '塔的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100}
     ]
 
 def getUserOrm(insertData: Dict[str, Any]) -> Dict[str, Any]:

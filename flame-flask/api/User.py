@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from ..utils.CryptUtils import decrypt_data, crypt_data
-from ..utils.DbOperatorFactory import insertFactory, selectFactory
+from ..utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect
 
 from typing import Dict, Any, List
 
@@ -136,9 +136,34 @@ def getUserStatusPro() -> Dict[str, Any]:
     '''
     current_user: any = get_jwt_identity()
     userId: int = request.args.get('userId')
+    program: str = request.args.get('program')
     statusCode: int = request.args.get('status')
 
-    if int(statusCode) == 0 or int(statusCode) == 1:
+    if program is None:
+        program = ''
+
+    if int(statusCode) == 0 or int(statusCode) == 1 and program != '':
+        selectData: Dict[str, Any] = {
+            'table': 'Program',
+            'field': [
+                'bug', 'finish', 'unwork'
+            ],
+            'filter': {
+                'userId': userId,
+                'programName': program,
+                'status': statusCode
+            }
+        }
+
+        responseData: List[Dict[str, Any]] = tempSelect(selectData=selectData)
+
+        return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 200,
+            'data': responseData
+        })
+    elif int(statusCode) == 0 or int(statusCode) == 1 and program == '':
         selectData: Dict[str, Any] = {
             'table': 'Program',
             'field': [
@@ -150,7 +175,7 @@ def getUserStatusPro() -> Dict[str, Any]:
             }
         }
 
-        responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
+        responseData: List[Dict[str, Any]] = tempSelect(selectData=selectData)
 
         return jsonify({
             'id': userId,
@@ -158,9 +183,8 @@ def getUserStatusPro() -> Dict[str, Any]:
             'status': 200,
             'data': responseData
         })
-    else:
-        print(statusCode)
-        return jsonify({
+    
+    return jsonify({
             'id': userId,
             'user': current_user,
             'status': 401,
