@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from ..utils.CryptUtils import decrypt_data, crypt_data
-from ..utils.DbOperatorFactory import insertFactory, selectFactory
+from ..utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect
 
 from typing import Dict, Any, List
 
@@ -95,28 +95,123 @@ def userOperate() -> Dict[str, Any]:
 
 @users.route('/user', methods=['GET'])
 @jwt_required()
-def getUserInfo() -> Dict[str, Any]:
+def getUserBugInfo() -> Dict[str, Any]:
     current_user: any = get_jwt_identity()
     '''
     查询数据库中用户项目表 -> user_id被作为查询条件
     数据获取以后形成数组json返回
+    该表内容以天为单位统计Bug数量 -> 一个多层柱状图.包括提交Bug和解决Bug
+    只拿到七天的Bug信息
     '''
     userId: int = request.args.get('userId')
 
     # 构造查询对象
     selectData: Dict[str, Any] = {
-        'table': 'Programs',
+        'table': 'UserProgram',
         'field': [
 
         ],
         'filter': {
-            'userId': userId
+            'userId': userId,
+            'datetime_between': ''
         }
     }
 
     # 直接将responseData构造成List[Dict[str, Any]]的形式
     responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
 
+    return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 200,
+            'data': responseData
+        })
+
+# 用户当前正在进行中的项目他们的Bug数量
+@users.route('/program/status', methods=['GET'])
+@jwt_required()
+def getUserStatusPro() -> Dict[str, Any]:
+    '''
+    查询user进行中项目的Bug数量
+    '''
+    current_user: any = get_jwt_identity()
+    userId: int = request.args.get('userId')
+    program: str = request.args.get('program')
+    statusCode: int = request.args.get('status')
+
+    if program is None:
+        program = ''
+
+    if int(statusCode) == 0 or int(statusCode) == 1 and program != '':
+        selectData: Dict[str, Any] = {
+            'table': 'Program',
+            'field': [
+                'bug', 'finish', 'unwork'
+            ],
+            'filter': {
+                'userId': userId,
+                'programName': program,
+                'status': statusCode
+            }
+        }
+
+        responseData: List[Dict[str, Any]] = tempSelect(selectData=selectData)
+
+        return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 200,
+            'data': responseData
+        })
+    elif int(statusCode) == 0 or int(statusCode) == 1 and program == '':
+        selectData: Dict[str, Any] = {
+            'table': 'Program',
+            'field': [
+                'bug', 'finish', 'unwork'
+            ],
+            'filter': {
+                'userId': userId,
+                'status': statusCode
+            }
+        }
+
+        responseData: List[Dict[str, Any]] = tempSelect(selectData=selectData)
+
+        return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 200,
+            'data': responseData
+        })
+    
+    return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 401,
+            'data': ''
+        })
+
+@users.route('/program', methods=['GET'])
+@jwt_required()
+def getUserProgram() -> Dict[str, Any]:
+    '''
+    通过user_id拿到项目下的bug数量 -> 用户名下所有的项目以及他们的Bug数量
+    '''
+    current_user: any = get_jwt_identity()
+    userId: int = request.args.get('userId')
+
+    selectData: Dict[str, Any] = {
+        'table': 'UserProgram',
+        'field': [
+            'program', 'bug', 'finish', 'unwork'
+        ],
+        'filter': {
+            'userId': userId,
+        }
+    }
+
+    responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
+    
     return jsonify({
             'id': userId,
             'user': current_user,
