@@ -71,9 +71,9 @@ def selectFactory(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
 def tempSelect(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [
         {'programName': '我的世界', 'allBug': 500, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
-        {'programName': '你的世界', 'allBug': 600, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
-        {'programName': '他的世界', 'allBug': 700, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
-        {'programName': '她的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
+        {'programName': '你的世界', 'allBug': 600, 'finishBug': 300, 'unWorkBug': 200, 'isNotBug': 100},
+        {'programName': '他的世界', 'allBug': 700, 'finishBug': 400, 'unWorkBug': 200, 'isNotBug': 100},
+        {'programName': '她的世界', 'allBug': 800, 'finishBug': 500, 'unWorkBug': 200, 'isNotBug': 100},
         # {'programName': '它的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
         # {'programName': '塌的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100},
         # {'programName': '塔的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100}
