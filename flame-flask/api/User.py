@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from ..utils.CryptUtils import decrypt_data, crypt_data
@@ -130,14 +130,14 @@ def getUserBugInfo() -> Dict[str, Any]:
 # 用户当前正在进行中的项目他们的Bug数量
 @users.route('/program/status', methods=['GET'])
 @jwt_required()
-def getUserStatusPro() -> Dict[str, Any]:
+def getUserStatusPro() -> Response:
     '''
     查询user进行中项目的Bug数量
     '''
-    current_user: any = get_jwt_identity()
-    userId: int = request.args.get('userId')
-    program: str = request.args.get('program')
-    statusCode: int = request.args.get('status')
+    current_user: Any = get_jwt_identity()
+    userId: str | None = request.args.get('userId')
+    program: str | None = request.args.get('program')
+    statusCode: str | None = request.args.get('status')
 
     if program is None:
         program = ''
