@@ -79,6 +79,27 @@ def tempSelect(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
         # {'programName': '塔的世界', 'allBug': 800, 'finishBug': 200, 'unWorkBug': 200, 'isNotBug': 100}
     ]
 
+def tempUserCareerData(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [
+        {'subject': '提交Bug数', 'A': 18000, 'fullMark': 30000},
+        {'subject': '确认Bug数', 'A': 15000, 'fullMark': 30000},
+        {'subject': '解决Bug数', 'A': 10000, 'fullMark': 30000},
+        {'subject': '完善需求数', 'A': 5000, 'fullMark': 30000},
+        {'subject': '用例条数', 'A': 20000, 'fullMark': 30000},
+        {'subject': '脚本数量', 'A': 15000, 'fullMark': 30000}
+    ]
+
+def tempUserProBugDiff(selectData: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [
+        {'program': '你好', 'level_1': 3, 'level_2': 10, 'level_3': 100, 'level_4': 200},
+        {'program': '我好', 'level_1': 2, 'level_2': 20, 'level_3': 150, 'level_4': 300},
+        {'program': '他好', 'level_1': 4, 'level_2': 30, 'level_3': 120, 'level_4': 250},
+        {'program': '她好', 'level_1': 5, 'level_2': 15, 'level_3': 130, 'level_4': 270},
+        {'program': '大家好', 'level_1': 1, 'level_2': 12, 'level_3': 160, 'level_4': 230},
+        {'program': '你家好', 'level_1': 6, 'level_2': 13, 'level_3': 122, 'level_4': 290},
+        {'program': '我家好', 'level_1': 8, 'level_2': 18, 'level_3': 143, 'level_4': 243}
+    ]
+
 def getUserOrm(insertData: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'username': insertData['email'],

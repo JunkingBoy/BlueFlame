@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, Response
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from ..utils.CryptUtils import decrypt_data, crypt_data
-from ..utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect
+from ..utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect, tempUserCareerData, tempUserProBugDiff
 
 from typing import Dict, Any, List
 
@@ -15,7 +15,7 @@ USERS = {
 }
 
 @users.route('/user', methods=['POST', 'PUT'])
-def userOperate() -> Dict[str, Any]:
+def userOperate() -> Response:
     if request.method == 'POST':
         loginData: Dict[str, Any] = request.get_json()
         userName: str = loginData.get('username')
@@ -95,15 +95,15 @@ def userOperate() -> Dict[str, Any]:
 
 @users.route('/user', methods=['GET'])
 @jwt_required()
-def getUserBugInfo() -> Dict[str, Any]:
-    current_user: any = get_jwt_identity()
+def getUserBugInfo() -> Response:
+    current_user: Any = get_jwt_identity()
     '''
     查询数据库中用户项目表 -> user_id被作为查询条件
     数据获取以后形成数组json返回
     该表内容以天为单位统计Bug数量 -> 一个多层柱状图.包括提交Bug和解决Bug
     只拿到七天的Bug信息
     '''
-    userId: int = request.args.get('userId')
+    userId: str | None = request.args.get('userId')
 
     # 构造查询对象
     selectData: Dict[str, Any] = {
@@ -119,6 +119,36 @@ def getUserBugInfo() -> Dict[str, Any]:
 
     # 直接将responseData构造成List[Dict[str, Any]]的形式
     responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
+
+    return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 200,
+            'data': responseData
+        })
+
+@users.route('/userCareer', methods=['GET'])
+@jwt_required()
+def getUserCareerData() -> Response:
+    current_user: Any = get_jwt_identity()
+
+    userId: str | None = request.args.get('userId')
+
+    if userId is None:
+        userId = ''
+
+    # 构造查询对象
+    selectData: Dict[str, Any] = {
+        'table': 'UserProgram',
+        'field': [
+
+        ],
+        'filter': {
+            'userId': userId,
+        }
+    }
+
+    responseData: List[Dict[str, Any]] = tempUserCareerData(selectData=selectData)
 
     return jsonify({
             'id': userId,
@@ -193,12 +223,12 @@ def getUserStatusPro() -> Response:
 
 @users.route('/program', methods=['GET'])
 @jwt_required()
-def getUserProgram() -> Dict[str, Any]:
+def getUserProgram() -> Response:
     '''
     通过user_id拿到项目下的bug数量 -> 用户名下所有的项目以及他们的Bug数量
     '''
-    current_user: any = get_jwt_identity()
-    userId: int = request.args.get('userId')
+    current_user: Any = get_jwt_identity()
+    userId: str | None = request.args.get('userId')
 
     selectData: Dict[str, Any] = {
         'table': 'UserProgram',
@@ -211,6 +241,31 @@ def getUserProgram() -> Dict[str, Any]:
     }
 
     responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
+    
+    return jsonify({
+            'id': userId,
+            'user': current_user,
+            'status': 200,
+            'data': responseData
+        })
+
+@users.route('/program/bug', methods=['GET'])
+@jwt_required()
+def getUserProBugDetail() -> Response:
+    current_user: Any = get_jwt_identity()
+    userId: str | None = request.args.get('userId')
+
+    selectData: Dict[str, Any] = {
+        'table': 'UserProgram',
+        'field': [
+            'level_1', 'level_2', 'level_3', 'level_4'
+        ],
+        'filter': {
+            'userId': userId
+        }
+    }
+
+    responseData: List[Dict[str, Any]] = tempUserProBugDiff(selectData=selectData)
     
     return jsonify({
             'id': userId,
