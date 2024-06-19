@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Response, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from ..utils.CryptUtils import decrypt_data, crypt_data
@@ -14,15 +14,16 @@ USERS = {
     "id": 1
 }
 
+
 @users.route('/user', methods=['POST', 'PUT'])
-def userOperate() -> Dict[str, Any]:
+def userOperate() -> Response:
     if request.method == 'POST':
         loginData: Dict[str, Any] = request.get_json()
-        userName: str = loginData.get('username')
-        encrypted_password_base64: str = loginData.get('encryptedPassword')
+        userName = loginData.get('username')
+        encrypted_password_base64 = loginData.get('encryptedPassword')
         # iv_base64: str = loginData.get('iv')
 
-        stored_password: str = USERS.get(userName)
+        stored_password = USERS.get(str(userName))
 
         try:
             if encrypted_password_base64 == stored_password:
@@ -65,7 +66,8 @@ def userOperate() -> Dict[str, Any]:
             cryptPassword: bytes = crypt_data(password)
 
             insertData: Dict[str, Any] = {
-                'table': 'User',
+                'table':
+                'User',
                 'data': [{
                     'email': str(email),
                     'phone': str(phone),
@@ -84,7 +86,7 @@ def userOperate() -> Dict[str, Any]:
         else:
             statusCode: int = 401
             responseMessage: str = 'The passwords you entered twice do not match!'
-        
+
         return jsonify({
             'status': statusCode,
             'data': [{
@@ -92,6 +94,7 @@ def userOperate() -> Dict[str, Any]:
                 'message': responseMessage
             }]
         })
+
 
 @users.route('/user', methods=['GET'])
 @jwt_required()
@@ -108,9 +111,7 @@ def getUserBugInfo() -> Dict[str, Any]:
     # 构造查询对象
     selectData: Dict[str, Any] = {
         'table': 'UserProgram',
-        'field': [
-
-        ],
+        'field': [],
         'filter': {
             'userId': userId,
             'datetime_between': ''
@@ -121,11 +122,12 @@ def getUserBugInfo() -> Dict[str, Any]:
     responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
 
     return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
+        'id': userId,
+        'user': current_user,
+        'status': 200,
+        'data': responseData
+    })
+
 
 # 用户当前正在进行中的项目他们的Bug数量
 @users.route('/program/status', methods=['GET'])
@@ -145,9 +147,7 @@ def getUserStatusPro() -> Dict[str, Any]:
     if int(statusCode) == 0 or int(statusCode) == 1 and program != '':
         selectData: Dict[str, Any] = {
             'table': 'Program',
-            'field': [
-                'bug', 'finish', 'unwork'
-            ],
+            'field': ['bug', 'finish', 'unwork'],
             'filter': {
                 'userId': userId,
                 'programName': program,
@@ -166,9 +166,7 @@ def getUserStatusPro() -> Dict[str, Any]:
     elif int(statusCode) == 0 or int(statusCode) == 1 and program == '':
         selectData: Dict[str, Any] = {
             'table': 'Program',
-            'field': [
-                'bug', 'finish', 'unwork'
-            ],
+            'field': ['bug', 'finish', 'unwork'],
             'filter': {
                 'userId': userId,
                 'status': statusCode
@@ -183,13 +181,14 @@ def getUserStatusPro() -> Dict[str, Any]:
             'status': 200,
             'data': responseData
         })
-    
+
     return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 401,
-            'data': ''
-        })
+        'id': userId,
+        'user': current_user,
+        'status': 401,
+        'data': ''
+    })
+
 
 @users.route('/program', methods=['GET'])
 @jwt_required()
@@ -202,19 +201,17 @@ def getUserProgram() -> Dict[str, Any]:
 
     selectData: Dict[str, Any] = {
         'table': 'UserProgram',
-        'field': [
-            'program', 'bug', 'finish', 'unwork'
-        ],
+        'field': ['program', 'bug', 'finish', 'unwork'],
         'filter': {
             'userId': userId,
         }
     }
 
     responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
-    
+
     return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
+        'id': userId,
+        'user': current_user,
+        'status': 200,
+        'data': responseData
+    })
