@@ -1,7 +1,7 @@
 from flask import Blueprint, Response, jsonify
 from typing import Dict, Any
 
-from ..utils.CryptUtils import set_aes_key
+from utils.CryptUtils import set_aes_key
 
 import base64
 import os

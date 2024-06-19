@@ -3,9 +3,10 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from flask_sqlalchemy import SQLAlchemy
+from utils.ParseConfig import get_value_from_yaml
 
-from .api.User import users
-from .api.Crypt import crypt
+from api.User import users
+from api.Crypt import crypt
 
 app: object = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = 'VeryS3cr3tK3yWithNum83rs&Spec!alChar'  # 应该更换为安全的密钥
@@ -35,6 +36,7 @@ class User(db.Model):
 
 @app.route('/users_test', methods=['GET'])
 def get_users():
+    print(get_value_from_yaml('k'))
     with app.app_context():
         users = User.query.all()
         return jsonify([user.username for user in users])

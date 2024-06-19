@@ -1,8 +1,8 @@
 from flask import Blueprint, Response, jsonify, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
-from ..utils.CryptUtils import decrypt_data, crypt_data
-from ..utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect
+from utils.CryptUtils import decrypt_data, crypt_data
+from utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect
 
 from typing import Dict, Any, List
 
