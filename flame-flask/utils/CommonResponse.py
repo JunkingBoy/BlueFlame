@@ -3,8 +3,6 @@ from enum import Enum
 from flask import Response
 
 
-# 希望搞一个类似字典的东西，但是 key 是 StatusCode, value 是对应的 msg
-# 用法: StatusCode.get_msg(200) -> 'Success'
 class StatusCode(Enum):
     OK = (200, 'Success')
     ERROR = (400, 'Error')
@@ -21,16 +19,25 @@ class StatusCode(Enum):
         return self._msg
 
     def __eq__(self, other) -> bool:
-        return self._code == other.code
+        if isinstance(other, StatusCode):
+            return self._code == other._code
+        return False
 
     def __ne__(self, other) -> bool:
-        return self._code != other.code
+        return not self.__eq__(other)
 
     def code(self) -> int:
         return self._code
 
     def msg(self) -> str:
         return self._msg
+
+    @classmethod
+    def get_msg(cls, code: int) -> str:
+        for status in cls:
+            if status.code() == code:
+                return status.msg()
+        return 'Unknown Status Code'
 
 
 class R:
@@ -60,32 +67,46 @@ class R:
 
     def to_http_json_response(self) -> Response:
         response = Response(self.to_json(), content_type='application/json')
+        response.status_code = self.code.code()
         return response
 
-    @classmethod
-    def to_json(cls, code=None, msg=None, data=None) -> str:
+    def to_json(self) -> str:
         try:
-            if isinstance(code, StatusCode):
-                code, msg = code.code(), code.msg()
-            return json.dumps({'code': code, 'data': data, 'msg': msg})
-        except Exception:
+            # 检查 data 是否可序列化
+            json_data = json.dumps({'code': self.code.code(), 'data': self.data, 'msg': self.code.msg()})
+            return json_data
+        except TypeError as e:
+            # 捕获序列化错误并打印详细信息
+            print(f"Serialization error: {e}")
             return json.dumps({
-                'code':
-                StatusCode.ERROR.value,
-                'data':
-                None,
-                'msg':
-                'An error occurred while serializing the response'
+                'code': StatusCode.ERROR.code(),
+                'data': None,
+                'msg': 'An error occurred while serializing the response'
             })
 
+    @staticmethod
+    def row_to_json(code, msg, data) -> str:
+        try:
+            # 检查 data 是否可序列化
+            json_data = json.dumps({'code': code, 'data': data, 'msg': msg})
+            return json_data
+        except TypeError as e:
+            # 捕获序列化错误并打印详细信息
+            print(f"Serialization error: {e}")
+            return json.dumps({
+                'code': StatusCode.ERROR.code(),
+                'data': None,
+                'msg': 'An error occurred while serializing the response'
+            })
 
     # 用法: R.create(999, "返回信息",  data={str or dict or array or sth can serialize by json})
     @classmethod
     def create(cls, code: StatusCode | int, msg: str, data=None) -> Response:
         if isinstance(code, StatusCode):
             code, msg = code.code(), code.msg()
-        response = Response(cls.to_json(code, msg, data),
+        response = Response(cls.row_to_json(code, msg, data),
                             content_type='application/json')
+        response.status_code = code
         return response
 
     # 用法: R.from_state(StatusCode.OK, data={同 R.create})
@@ -95,10 +116,10 @@ class R:
 
     # 用法: R.ok(data={同 R.create})
     @classmethod
-    def ok(cls, msg='Success', data=None) -> Response:
+    def ok(cls, data, msg='Success') -> Response:
         return cls(StatusCode.OK, data).to_http_json_response()
 
     # 用法: R.err(data={同 R.create})
     @classmethod
-    def err(cls, msg='Error', data=None) -> Response:
+    def err(cls, data, msg='Error') -> Response:
         return cls(StatusCode.ERROR, data).to_http_json_response()
