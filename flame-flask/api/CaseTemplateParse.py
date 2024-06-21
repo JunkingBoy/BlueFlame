@@ -1,4 +1,5 @@
 import os
+from service.ParseCaseTemplate import ParseCaseTemplate
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from flask import Blueprint, request, send_file
@@ -22,6 +23,9 @@ def download_case_template_file():
     finally:
         os.chdir(cwd)
 
+def is_valid_file(file):
+    return '.' in file and file.rsplit('.', 1)[1].lower() in ['xlsx', 'xls']
+
 @case.route('/upload', methods=['POST'])
 @jwt_required()
 def upload_file():
@@ -30,7 +34,12 @@ def upload_file():
     file = request.files['file']
     if file.filename == '' or file.filename is None:
         return R.err('No selected file')
-    if file:
-        file.save(os.path.join('.', file.filename))
-        # TODO<2024-06-21, @xcx> 添加解析模版的代码
-        return R.ok('File uploaded successfully')
+    if not is_valid_file(file.filename):
+        return R.err('Invalid file type')
+
+    data = ParseCaseTemplate(file).get_data()
+    print(f'data: {data}')
+
+    # file.save(os.path.join('.', file.filename))
+    # TODO<2024-06-21, @xcx> 添加解析模版的代码
+    return R.ok('File uploaded successfully')
