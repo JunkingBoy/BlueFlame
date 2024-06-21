@@ -1,275 +1,92 @@
-from flask import Blueprint, jsonify, request, Response
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from datetime import datetime
+from pytz import utc
+from dataclasses import dataclass, asdict
+import hashlib
+from flask import Blueprint, Response
+from flask_jwt_extended import  create_access_token, get_jwt_identity, jwt_required
+from utils.CommonResponse import R
+from flask import request
+from model.User import User, UserIdentity
 
-from ..utils.CryptUtils import decrypt_data, crypt_data
-from ..utils.DbOperatorFactory import insertFactory, selectFactory, tempSelect, tempUserCareerData, tempUserProBugDiff
+user = Blueprint("user", __name__)
 
-from typing import Dict, Any, List
-
-users: object = Blueprint('user', __name__)
-
-USERS = {
-    # hashlib.sha256("admin".encode()).hexdigest(): hashlib.sha256("password".encode()).hexdigest(),
-    "admin": "password",
-    "id": 1
-}
-
-@users.route('/user', methods=['POST', 'PUT'])
-def userOperate() -> Response:
-    if request.method == 'POST':
-        loginData: Dict[str, Any] = request.get_json()
-        userName: str = loginData.get('username')
-        encrypted_password_base64: str = loginData.get('encryptedPassword')
-        # iv_base64: str = loginData.get('iv')
-
-        stored_password: str = USERS.get(userName)
-
-        try:
-            if encrypted_password_base64 == stored_password:
-                userId: int = USERS.get('id')
-                token: str = create_access_token(identity=userName)
-                statusCode: int = 200
-                responseMessage: str = 'Login Successful!'
-            else:
-                userId: int = ''
-                token: str = ''
-                statusCode: int = 401
-                responseMessage: str = 'Login Fail!'
-        except Exception as e:
-            token: str = ''
-            statusCode: int = 402
-            responseMessage: str = str(e)
-
-        return jsonify({
-            'id': userId,
-            'token': token,
-            'status': statusCode,
-            'data': [{
-                'message': responseMessage
-            }]
-        })
-    elif request.method == 'PUT':
-        registerData: Dict[str, Any] = request.get_json()
-        email: str = registerData.get('email')
-        phone: int = registerData.get('phoneNumber')
-        password: str = registerData.get('firstPassword')
-        confirmPassword: str = registerData.get('confirmPassword')
-
-        if password == confirmPassword:
-            '''
-            先把密码经过加密处理
-            然后构建一个json数据
-            将数据插入数据库 -> email作为username
-            '''
-            # 这里需要加密处理密码 -> 时间戳在写入数据库的时候同步
-            cryptPassword: bytes = crypt_data(password)
-
-            insertData: Dict[str, Any] = {
-                'table': 'User',
-                'data': [{
-                    'email': str(email),
-                    'phone': str(phone),
-                    'password': str(cryptPassword)
-                }]
-            }
-
-            success: bool = insertFactory(insertData=insertData)
-
-            if success == True:
-                statusCode: int = 200
-                responseMessage: str = 'Register Successful!'
-            else:
-                statusCode: int = 401
-                responseMessage: str = 'Register Fail!'
-        else:
-            statusCode: int = 401
-            responseMessage: str = 'The passwords you entered twice do not match!'
-        
-        return jsonify({
-            'status': statusCode,
-            'data': [{
-                'username': '',
-                'message': responseMessage
-            }]
-        })
-
-@users.route('/user', methods=['GET'])
-@jwt_required()
-def getUserBugInfo() -> Response:
-    current_user: Any = get_jwt_identity()
-    '''
-    查询数据库中用户项目表 -> user_id被作为查询条件
-    数据获取以后形成数组json返回
-    该表内容以天为单位统计Bug数量 -> 一个多层柱状图.包括提交Bug和解决Bug
-    只拿到七天的Bug信息
-    '''
-    userId: str | None = request.args.get('userId')
-
-    # 构造查询对象
-    selectData: Dict[str, Any] = {
-        'table': 'UserProgram',
-        'field': [
-
-        ],
-        'filter': {
-            'userId': userId,
-            'datetime_between': ''
-        }
-    }
-
-    # 直接将responseData构造成List[Dict[str, Any]]的形式
-    responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
-
-    return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
-
-@users.route('/userCareer', methods=['GET'])
-@jwt_required()
-def getUserCareerData() -> Response:
-    current_user: Any = get_jwt_identity()
-
-    userId: str | None = request.args.get('userId')
-
-    if userId is None:
-        userId = ''
-
-    # 构造查询对象
-    selectData: Dict[str, Any] = {
-        'table': 'UserProgram',
-        'field': [
-
-        ],
-        'filter': {
-            'userId': userId,
-        }
-    }
-
-    responseData: List[Dict[str, Any]] = tempUserCareerData(selectData=selectData)
-
-    return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
-
-# 用户当前正在进行中的项目他们的Bug数量
-@users.route('/program/status', methods=['GET'])
-@jwt_required()
-def getUserStatusPro() -> Response:
-    '''
-    查询user进行中项目的Bug数量
-    '''
-    current_user: Any = get_jwt_identity()
-    userId: str | None = request.args.get('userId')
-    program: str | None = request.args.get('program')
-    statusCode: str | None = request.args.get('status')
-
-    if program is None:
-        program = ''
-
-    if int(statusCode) == 0 or int(statusCode) == 1 and program != '':
-        selectData: Dict[str, Any] = {
-            'table': 'Program',
-            'field': [
-                'bug', 'finish', 'unwork'
-            ],
-            'filter': {
-                'userId': userId,
-                'programName': program,
-                'status': statusCode
-            }
-        }
-
-        responseData: List[Dict[str, Any]] = tempSelect(selectData=selectData)
-
-        return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
-    elif int(statusCode) == 0 or int(statusCode) == 1 and program == '':
-        selectData: Dict[str, Any] = {
-            'table': 'Program',
-            'field': [
-                'bug', 'finish', 'unwork'
-            ],
-            'filter': {
-                'userId': userId,
-                'status': statusCode
-            }
-        }
-
-        responseData: List[Dict[str, Any]] = tempSelect(selectData=selectData)
-
-        return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
+@user.route("/register", methods=["POST"])
+def user_register() -> Response:
+    """
+    1. 检查电话号码是否已经存在
+    2. 加密密码, 使用确定性hash, sha256
+    3. 把加密密码写进数据库, 然后生成 jwt, 返回json
+    """
+    from service.UserService import UserService
     
-    return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 401,
-            'data': ''
-        })
-
-@users.route('/program', methods=['GET'])
-@jwt_required()
-def getUserProgram() -> Response:
-    '''
-    通过user_id拿到项目下的bug数量 -> 用户名下所有的项目以及他们的Bug数量
-    '''
-    current_user: Any = get_jwt_identity()
-    userId: str | None = request.args.get('userId')
-
-    selectData: Dict[str, Any] = {
-        'table': 'UserProgram',
-        'field': [
-            'program', 'bug', 'finish', 'unwork'
-        ],
-        'filter': {
-            'userId': userId,
-        }
-    }
-
-    responseData: List[Dict[str, Any]] = selectFactory(selectData=selectData)
     
-    return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
+    data = request.json
+    if not data:
+        return R.err(
+            {"error": "No data provided, `Phone` and `Password` are required"})
+
+    phone = str(data.get("phone"))
+    pwd = data.get("password")
+    pwd_confirm = str(data.get("password_confirm"))
+
+    if not isinstance(pwd, str):
+        return R.err({"error": "`Password` must be a string"})
+
+
+    if pwd != pwd_confirm:
+        return R.err({"error": "Password not match double confirm password"})
+
+    existing_user = User.query.filter_by(phone=phone).first()
+    if existing_user:
+        return R.err({"error": "Phone number already registered"})
+
+    pwd = hashlib.sha256(pwd.encode()).hexdigest()
+
+    user = User(phone=phone, password=pwd)
+    UserService.create(user)
+
+    return R.ok("用户创建成功")
+
+
+@user.route("/login", methods=["POST"])
+def user_login() -> Response:
+    data = request.json
+    if not data:
+        return R.err({
+            "error":
+            "No data provided, `phone`, `password` are required"
         })
 
-@users.route('/program/bug', methods=['GET'])
+    phone = str(data.get("phone"))
+    input_pwd = str(data.get("password"))
+
+    # Check if the phone number already exists
+    existing_user = User.query.filter_by(phone=phone).first()
+    if not existing_user:
+        return R.err({"error": "Phone number not registered"})
+
+    #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
+    user: User | None = User.query.filter_by(phone=phone).first()
+    if user is None:
+        return R.err({"error": "User not found"})
+
+    if hashlib.sha256(str(input_pwd).encode()).hexdigest() != user.password:
+        return R.err({"error": "Password not match(Compare DB)"})
+
+    token = create_access_token(identity=UserIdentity(
+        phone=user.phone, user_id=user.user_id).to_dict())
+
+    # 返回 Bearer token
+    return R.ok({"token": token, "token_type": "Bearer"})
+
+
 @jwt_required()
-def getUserProBugDetail() -> Response:
-    current_user: Any = get_jwt_identity()
-    userId: str | None = request.args.get('userId')
+def get_user_indentity() -> UserIdentity:
+    identity_dict = get_jwt_identity()
+    return UserIdentity(**identity_dict)
 
-    selectData: Dict[str, Any] = {
-        'table': 'UserProgram',
-        'field': [
-            'level_1', 'level_2', 'level_3', 'level_4'
-        ],
-        'filter': {
-            'userId': userId
-        }
-    }
 
-    responseData: List[Dict[str, Any]] = tempUserProBugDiff(selectData=selectData)
-    
-    return jsonify({
-            'id': userId,
-            'user': current_user,
-            'status': 200,
-            'data': responseData
-        })
+@user.route("/info", methods=["GET"])
+@jwt_required()
+def user_info():
+    return R.ok(get_user_indentity().to_dict())

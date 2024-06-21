@@ -21,7 +21,7 @@ def insertFactory(insertData: Dict[str, Any]) -> bool:
     # 构造插入语句的值部分，使用？作为占位符 -> 确保与columnsName长度一致
     placeholders: Tuple[str, ...] = tuple('?' for _ in columnsName)
 
-    sql: str = f'INSERT INTO {tableName} ({','.join(columnsName)}) VALUES ({','.join(placeholders)})'
+    sql: str = f"INSERT INTO {tableName} ({','.join(columnsName)}) VALUES ({','.join(placeholders)})"
 
     return True
 
