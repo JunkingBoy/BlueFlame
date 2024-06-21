@@ -10,7 +10,7 @@ from model.User import User, UserIdentity
 
 user = Blueprint("user", __name__)
 
-@user.route("/user_register", methods=["POST"])
+@user.route("/register", methods=["POST"])
 def user_register() -> Response:
     """
     1. 检查电话号码是否已经存在
@@ -48,7 +48,7 @@ def user_register() -> Response:
     return R.ok("用户创建成功")
 
 
-@user.route("/user_login", methods=["POST"])
+@user.route("/login", methods=["POST"])
 def user_login() -> Response:
     data = request.json
     if not data:
@@ -86,7 +86,7 @@ def get_user_indentity() -> UserIdentity:
     return UserIdentity(**identity_dict)
 
 
-@user.route("/user_info", methods=["GET"])
+@user.route("/info", methods=["GET"])
 @jwt_required()
 def user_info():
     return R.ok(get_user_indentity().to_dict())

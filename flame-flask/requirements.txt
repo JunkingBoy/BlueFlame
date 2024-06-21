@@ -3,4 +3,4 @@ flask-cors
 flask-jwt-extended
 Flask-SQLAlchemy
 psycopg2-binary
-# 启动命令 python -m flame-flask.main
+openpyxl
