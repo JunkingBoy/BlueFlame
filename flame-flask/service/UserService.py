@@ -5,4 +5,4 @@ class UserService:
 
     @staticmethod
     def create(user: User):
-        user.db_create()
+        user.create()
