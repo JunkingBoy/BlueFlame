@@ -169,3 +169,4 @@ ehthumbs.db
 
 tmp/
 .vscode/
+tests/
