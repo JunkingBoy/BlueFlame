@@ -21,7 +21,7 @@ class User(db.Model):
     create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
     update_time = db.Column(db.DateTime,
                             default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.utcnow)
+                            onupdate=lambda: datetime.now)
 
     # init
     def __init__(self, phone, password):
