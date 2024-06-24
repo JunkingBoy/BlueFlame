@@ -1,35 +1,39 @@
 from model.User import User
 from model import db
-from model.Case import Case, FuncCase
+from model.Case import Case, FuncCase, CaseState
 from service.CaseTemplate import CaseTemplate
+from flask import current_app
 
 class CaseService:
     @staticmethod
     def insert_cases_to_db(case_template: CaseTemplate, user_id: int, project_id: int):
         cases_data = case_template.get_data()
-        
-        for case_data in cases_data:
-            # 创建 Case 对象
-            case = Case(
-                user_id=user_id,
-                project_id=project_id
-            )
-            db.session.add(case)
-            db.session.commit()  # 确保 Case 被分配了 ID
 
-            # 创建 FuncCase 对象
-            func_case = FuncCase(
-                case_id=case.id,
-                case_name=case_data.get('case_name'),
-                case_belong_module=case_data.get('module'),
-                case_step=case_data.get('steps'),
-                case_except_result=case_data.get('expected_result'),
-                case_state=CaseState.UNKNOWN,  # 根据需要设置初始状态
-                case_comment=case_data.get('test_result')
-            )
-            db.session.add(func_case)
+        if isinstance(cases_data, list) and all(isinstance(item, dict) for item in cases_data):
+            for case_data in cases_data:
+                # 创建 Case 对象
+                case = Case(
+                    user_id=user_id,
+                    project_id=project_id
+                )
+                db.session.add(case)
+                db.session.commit()  # 确保 Case 被分配了 ID
 
-        db.session.commit()
+                # 创建 FuncCase 对象
+                func_case = FuncCase(
+                    case_id=case.id,
+                    case_name=case_data.get('case_name'),
+                    case_belong_module=case_data.get('module'),
+                    case_step=case_data.get('steps'),
+                    case_except_result=case_data.get('expected_result'),
+                    case_state=CaseState.UNKNOWN,  # 根据需要设置初始状态
+                    # case_comment=case_data.get('test_result')
+                )
+                db.session.add(func_case)
+            db.session.commit()
+        else:
+            current_app.logger.error(f"Invalid data format: {cases_data}")
+            raise ValueError("Invalid data format")
 
     @staticmethod
     def insert_case_with_func_cases(case_data: dict, func_case_data: dict) -> None:

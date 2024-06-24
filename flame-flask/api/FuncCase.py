@@ -4,7 +4,6 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from service.UserService import get_user_indentity
 from utils.CommonResponse import R
 
-
 func_case = Blueprint("func_case", __name__)
 
 @func_case.route("/case/func/create", methods=["POST"])

@@ -80,8 +80,6 @@ def user_login() -> Response:
     # 返回 Bearer token
     return R.ok({"token": token, "token_type": "Bearer"})
 
-
-
 @user.route("/info", methods=["GET"])
 @jwt_required()
 def user_info():
