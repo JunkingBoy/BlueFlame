@@ -21,7 +21,7 @@ class CaseTemplate:
 
     def parse_case_template_excel(
             self,
-            sheet_name: str = None) -> List[Dict[str, Any]] | R:  # type: ignore
+            sheet_name: str = None) -> List[Dict[str, Any]]:  # type: ignore
         try:
             # 加载Excel工作簿
             workbook = openpyxl.load_workbook(self.file_path)
