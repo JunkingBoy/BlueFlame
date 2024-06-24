@@ -10,7 +10,7 @@ from model.User import User, UserIdentity
 
 user = Blueprint("user", __name__)
 
-@user.route("/register", methods=["PUT"])
+@user.route("/register", methods=["POST"])
 def user_register() -> Response:
     """
     1. 检查电话号码是否已经存在

@@ -1,7 +1,7 @@
 import os
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
-from flask import Blueprint, send_file, request
+from flask import Blueprint, send_file, request, Response
 
 
 case = Blueprint('case', __name__)
@@ -36,3 +36,23 @@ def download_case_template_file():
             os.chdir(cwd)
     else:
         return R.create(code=404, msg='type参数错误', data={})
+
+@case.route('/upload/case', methods=["POST"])
+@jwt_required()
+def upload_case_file() -> Response:
+    type: str | None = request.args.get('type')
+    file = request.files.get('file')
+
+    if not file:
+        return R.create(code=400, msg='File not found', data={})
+
+    # 获取文件拓展名
+    fileName: str | None = file.filename
+    if fileName is not None:
+        fileExtension: str = fileName.rsplit('.', 1)[1].lower()
+        if fileExtension in ('xlsx', 'xls'):
+            file.save(f'./static/test_template.{fileExtension}')
+        else:
+            return R.create(code=400, msg='File extension error', data={})
+        
+    return R.create(code=200, msg='Success', data={})
