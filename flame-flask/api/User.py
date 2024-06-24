@@ -7,6 +7,7 @@ from flask_jwt_extended import  create_access_token, get_jwt_identity, jwt_requi
 from utils.CommonResponse import R
 from flask import request
 from model.User import User, UserIdentity
+from service.UserService import get_user_indentity
 
 user = Blueprint("user", __name__)
 
@@ -79,11 +80,6 @@ def user_login() -> Response:
     # 返回 Bearer token
     return R.ok({"token": token, "token_type": "Bearer"})
 
-
-@jwt_required()
-def get_user_indentity() -> UserIdentity:
-    identity_dict = get_jwt_identity()
-    return UserIdentity(**identity_dict)
 
 
 @user.route("/info", methods=["GET"])

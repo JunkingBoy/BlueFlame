@@ -66,7 +66,7 @@ class R:
         return self.to_json()
 
     def to_http_json_response(self) -> Response:
-        response = Response(self.to_json(), content_type='application/json')
+        response = Response(self.to_json(), content_type='application/json; charset=utf-8')
         response.status_code = self.code.code()
         return response
 
