@@ -1,5 +1,5 @@
 import os
-from service.ParseCaseTemplate import ParseCaseTemplate
+from service.CaseTemplate import CaseTemplate
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from flask import Blueprint, request, send_file
@@ -9,7 +9,7 @@ case = Blueprint('case', __name__)
 
 
 @case.route('/download/case_template', methods=["GET"])
-# @jwt_required()
+@jwt_required()
 def download_case_template_file():
     cwd = os.getcwd()
     module_cwd = os.path.dirname(os.path.realpath(__file__))
@@ -31,15 +31,16 @@ def is_valid_file(file):
 def upload_file():
     if 'file' not in request.files:
         return R.err('No file upload')
+    case_type = request.files['type']
     file = request.files['file']
     if file.filename == '' or file.filename is None:
         return R.err('No selected file')
     if not is_valid_file(file.filename):
         return R.err('Invalid file type')
 
-    data = ParseCaseTemplate(file).get_data()
-    print(f'data: {data}')
+    data = CaseTemplate(file).get_data()
+    # print(f'data: {data}')
 
     # file.save(os.path.join('.', file.filename))
     # TODO<2024-06-21, @xcx> 添加解析模版的代码
-    return R.ok('File uploaded successfully')
+    return R.ok(data)
