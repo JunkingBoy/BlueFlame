@@ -6,12 +6,53 @@ from werkzeug.datastructures import FileStorage
 from flask import current_app
 from utils.FindHeader import find_header
 
+
 class CaseTemplate:
 
-    def __init__(self, file: FileStorage, case_type: str = ""):
+    def __init__(self,
+                 file: FileStorage,
+                 user_id: int,
+                 project_id: int,
+                 case_type: str = ""):
         self.file = file
+        self.user_id = user_id
+        self.project_id = project_id
         self.case_type = case_type
         self.data = self.parse_case_template_excel()
+        
+    def __repr__(self) -> str:
+        return f"user_id: {self.user_id}, project_id: {self.project_id}, case_type: {self.case_type}, data: {self.data}"
+
+    # def save_case_template(self):
+    #     # 保存用例模板到数据库
+    #     # ...
+    #     current_app.logger.info(f"保存用例模板成功")    
+        
+    # def update_case_template(self):
+    #     # 更新用例模板到数据库
+    #     # ...
+    #     current_app.logger.info(f"更新用例模板成功")
+        
+    # def delete_case_template(self):
+    #     # 删除用例模板
+    #     # ...
+    #     current_app.logger.info(f"删除用例模板成功")        
+        
+    # def get_case_template(self):
+    #     # 获取用例模板
+    #     # ...
+    #     current_app.logger.info(f"获取用例模板成功")
+                
+                
+        
+    def to_dict(self):
+        return {
+            "file": self.file,
+            "user_id": self.user_id,
+            "project_id": self.project_id,
+            "case_type": self.case_type,
+            "data": self.data
+        }
 
     def get_data(self):
         return self.data
@@ -20,13 +61,13 @@ class CaseTemplate:
                                   sheet_name: str = ""
                                   ) -> List[Dict[str, Any]]:
         try:
-            # 将 FileStorage 对象的内容读取到内存中的 BytesIO 对象
             file_stream = io.BytesIO(self.file.read())
-            
-            # 使用 BytesIO 对象加载工作簿
             workbook = load_workbook(file_stream, data_only=True)
             sheet = workbook[sheet_name] if sheet_name else workbook.active
-            headers = [cell.value for cell in next(sheet.iter_rows(min_row=1, max_row=1))]
+            headers = [
+                cell.value
+                for cell in next(sheet.iter_rows(min_row=1, max_row=1))
+            ]
             header_dict = self.get_header_dict()
             data = self.extract_data(sheet, headers, header_dict)
             return data
@@ -51,20 +92,33 @@ class CaseTemplate:
     def extract_data(self, sheet: Worksheet, headers: List[str],
                      header_dict: Dict[str, str]) -> List[Dict[str, Any]]:
         data = []
+        # 获取合并单元格的值
         merged_cells_value = self.get_merged_cells_value(sheet)
+        # 遍历工作表中的所有行
         for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row):
             row_data = {}
+            # 遍历当前行的所有单元格
             for cell, header in zip(row, headers):
+                # 获取单元格的值，如果存在合并单元格，则获取合并单元格的值
                 cell_value = merged_cells_value.get(cell.coordinate,
                                                     cell.value)
                 english_header = header_dict.get(header, header)
-                row_data[english_header] = cell_value
+                # 如果英文表头不在row_data中，则添加到row_data中
+                if english_header not in row_data:
+                    row_data[english_header] = cell_value if cell_value is not None else ""
+                else:
+                    row_data[english_header] = cell_value if cell_value is not None else row_data[english_header]
+                # 判断必填字段, 筛选出错误用例, 添加标识
+                if english_header in ["module", "case_name", "precondition"] and row_data[english_header] == "":
+                    row_data["dirty"] = True
+                    row_data[english_header] = "required"
             data.append(row_data)
         return data
 
+
     def get_merged_cells_value(self, sheet: Worksheet) -> Dict[str, Any]:
         merged_cells_value = {}
-        for merged_range in sheet.merged_cell_ranges.ranges:
+        for merged_range in sheet.merged_cells.ranges:
             top_left_value = sheet.cell(merged_range.min_row,
                                         merged_range.min_col).value
             for row in range(merged_range.min_row, merged_range.max_row + 1):

@@ -83,7 +83,7 @@ class R:
                 'data': None,
                 'msg': 'An error occurred while serializing the response'
             })
-
+            
     @staticmethod
     def row_to_json(code, msg, data) -> str:
         try:
