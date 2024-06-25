@@ -23,7 +23,7 @@ def download_case_template_file():
 
     match type:
         case '1':
-            template_filepath = './static/case_template.xlsx'
+            template_filepath = './static/func_case_template.xlsx'
         case '2':
             pass
         case _:
