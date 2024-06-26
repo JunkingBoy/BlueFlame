@@ -21,7 +21,7 @@ class User(db.Model):
     create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
     update_time = db.Column(db.DateTime,
                             default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now)
+                            onupdate=lambda: datetime.now(utc))
 
     def __init__(self, phone, password):
         self.phone = phone
@@ -44,3 +44,4 @@ class User(db.Model):
     def create(self):
         db.session.add(self)
         db.session.commit()
+
