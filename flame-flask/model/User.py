@@ -14,6 +14,7 @@ class UserIdentity:
 
 
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.String(80), unique=True, nullable=False)
     phone = db.Column(db.String(11), unique=True, nullable=False)
@@ -44,4 +45,3 @@ class User(db.Model):
     def create(self):
         db.session.add(self)
         db.session.commit()
-

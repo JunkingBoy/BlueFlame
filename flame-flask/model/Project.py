@@ -2,9 +2,11 @@ from . import db
 from datetime import datetime
 from pytz import utc
 from dataclasses import dataclass, asdict
+from api.User import UserIdentity
 
 
 class Project(db.Model):
+    __tablename__ = 'projects'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     project_id = db.Column(db.Integer, unique=True, nullable=False)
     project_name = db.Column(db.String(200), unique=True, nullable=False)
@@ -33,9 +35,10 @@ class Project(db.Model):
 
 
 class ProjectUser(db.Model):
+    __tablename__ = 'projects_user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     project_id = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String(11), unique=False, nullable=False)
 
     def __init__(self, project_id, user_id):
         self.project_id = project_id
@@ -51,10 +54,18 @@ class ProjectUser(db.Model):
             "project_id": self.project_id,
             "user_id": self.user_id
         }
+
+@dataclass
+class ProjectInfo:
+    project_id: int
+    project_name: str
+    project_desc: str
+    users: list[UserIdentity]
+
+    def to_dict(self) -> dict:
+        return asdict(self)
         
     
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
-        
+    def __repr__(self):
+        return f"project_id: {self.project_id}\n, project_name: {self.project_name}\n, project_desc: {self.project_desc}, users: {self.users}\n"
     
