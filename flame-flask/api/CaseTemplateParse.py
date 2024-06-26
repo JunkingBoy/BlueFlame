@@ -3,6 +3,7 @@ from service.CaseTemplate import CaseTemplate
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from flask import Blueprint, send_file, request, Response, current_app
+from werkzeug.utils import secure_filename
 
 case = Blueprint('case', __name__)
 
@@ -31,7 +32,12 @@ def download_case_template_file():
 
     if template_filepath != '':
         try:
-            return send_file(template_filepath, as_attachment=True)
+            file_name: str = secure_filename(template_filepath)
+            return send_file(
+                template_filepath,
+                as_attachment=True,
+                download_name=f"{file_name}"
+            )
         except FileNotFoundError as err:
             current_app.logger.error(f"Can not found file: {err}")
             return R.create(404, "File not found") 
