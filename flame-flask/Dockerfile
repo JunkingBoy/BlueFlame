@@ -1,23 +1,16 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
-# 设置工作目录
+# 设置工作目录为 /app
 WORKDIR /app
 
-# 将当前目录的内容复制到工作目录中
-COPY . /app
+# 将项目中的所有文件复制到容器的 /app 目录下
+COPY . .
 
-# 安装 Python 包
-RUN pip install --no-cache-dir -r requirements.txt
+# 安装依赖项
+RUN pip install -r requirements.txt
 
-# 暴露应用运行的端口
-EXPOSE 5000
+# 暴露 Flask 应用运行的端口（假设 Flask 应用监听在 8000 端口）
+EXPOSE 8000
 
-# 运行 Flask 应用
-CMD ["python", "-m main"]
-
-
-# 构建镜像
-# docker build -t bf .
-
-# 运行镜像
-# docker run -p 5000:8000 bf
+# 启动 Flask 应用
+CMD ["python", "main.py"]
