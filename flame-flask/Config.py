@@ -1,5 +1,6 @@
 from datetime import timedelta
 import os
+from typing import Any
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -12,7 +13,7 @@ def create_app() -> Flask:
     app: Flask = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = StringUtil.generate_string(32)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = get_value_from_yaml("db_connect")
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     appHandler: Handler = log()
@@ -23,7 +24,7 @@ def create_app() -> Flask:
     return app
 
 
-def get_value_from_yaml(key):
+def get_value_from_yaml(key) -> Any:
     cwd = os.getcwd()
     module_cwd = os.path.dirname(os.path.realpath(__file__))
     os.chdir(module_cwd)
