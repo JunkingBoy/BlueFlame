@@ -39,6 +39,9 @@ class ProjectUser(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     project_id = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.String(11), unique=False, nullable=False)
+    update_time = db.Column(db.DateTime,
+                            default=lambda: datetime.now(utc),
+                            onupdate=lambda: datetime.now(utc))
 
     def __init__(self, project_id, user_id):
         self.project_id = project_id

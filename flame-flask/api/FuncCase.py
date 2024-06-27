@@ -29,5 +29,6 @@ def create_case()-> Response:
             "No data provided, `phone`, `password` are required"
         })
 
+    # data的作用
     CaseService.insert_case_with_func_cases(case, case)
     return R.ok("创建成功")
