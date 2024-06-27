@@ -10,7 +10,6 @@ from utils.StringUtil import get_hash_as_int
 
 project = Blueprint("project", __name__)
 
-
 @project.route("/create", methods=["POST"])
 @jwt_required()
 def create_project() -> Response:
@@ -24,17 +23,21 @@ def create_project() -> Response:
     project_name = str(data.get("project_name"))
     project_desc = str(data.get("project_desc"))
 
-    project_id = get_hash_as_int(project_name)
-
-    existd = Project.query.filter_by(project_id=project_id).first()
-    if existd:
-        return R.err("已经存在同名项目")
+    if not project_name or not project_desc:
+        return R.err({"error": "`project_name` are required"})
     else:
-        project = Project(project_id, project_name, project_desc)
-        project_user = ProjectUser(project_id, get_user_indentity().user_id)
-        ProjectService.create(project, project_user)
-        return R.ok("项目创建成功")
+        # 空name处理
+        project_id = get_hash_as_int(project_name)
 
+        existd = Project.query.filter_by(project_id=project_id).first()
+        if existd:
+            return R.err("已经存在同名项目")
+        else:
+            project = Project(project_id, project_name, project_desc)
+            project_user = ProjectUser(project_id, get_user_indentity().user_id)
+            ProjectService.create(project, project_user)
+            return R.ok("项目创建成功")
+    
 
 @project.route("/info", methods=["GET"])
 @jwt_required()
