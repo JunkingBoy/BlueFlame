@@ -14,6 +14,7 @@ class UserIdentity:
 
 
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.String(80), unique=True, nullable=False)
     phone = db.Column(db.String(11), unique=True, nullable=False)
@@ -21,7 +22,7 @@ class User(db.Model):
     create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
     update_time = db.Column(db.DateTime,
                             default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now)
+                            onupdate=lambda: datetime.now(utc))
 
     def __init__(self, phone, password):
         self.phone = phone

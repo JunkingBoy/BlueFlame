@@ -6,6 +6,7 @@ from service.CaseTemplate import CaseTemplate
 from flask import current_app
 
 class CaseService:
+
     @staticmethod
 
 

@@ -1,3 +1,4 @@
+import hashlib
 import os
 import random
 import string
@@ -22,6 +23,9 @@ def secure_filename(filename: str) -> str:
             random.choice(string.ascii_letters + string.digits)
             for _ in range(10))
     return safe_name
+    
+def get_hash_as_int(key: str, len = 6)-> int: 
+    return int(hashlib.sha256(key.encode()).hexdigest()[:len], 16) 
     
 # test secru_filename
 # print(secure_filename("../../../etc/中文@config$test.conf"))
