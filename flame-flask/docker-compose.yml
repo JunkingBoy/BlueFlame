@@ -1,0 +1,29 @@
+# docker-compose.yml
+
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"  # 将容器内部的 8000 端口映射到宿主机的 8000 端口
+    depends_on:
+      - postgres  # 如果有依赖的服务，需要在这里声明
+    environment:
+      - DATABASE_URL=postgresql://postgres:test@postgres:5432/bf  # 连接 PostgreSQL 数据库的URL
+    networks:
+      - mynetwork
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: bf
+    ports:
+      - "5433:5432"
+    networks:
+      - mynetwork
+
+networks:
+  mynetwork:
+    driver: bridge

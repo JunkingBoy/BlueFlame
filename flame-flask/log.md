@@ -191,3 +191,96 @@ To record test cases in a database, you can design a table with the following co
 11. **Last Updated Date**: The date when the test case was last updated.
 
 You can create additional columns based on your specific requirements. This table structure will allow you to store and manage different types of test cases in your database effectively.
+
+
+```python
+@app.route('/func_case', methods=['POST'])
+def create_func_case():
+	data = request.json
+	func_case = FuncCase(func_detail=data['func_detail'])
+	db.session.add(func_case)
+	db.session.commit()
+	return jsonify(func_case.to_dict()), 201
+
+@app.route('/func_case/<int:id>', methods=['GET'])
+def get_func_case(id):
+	func_case = FuncCase.query.get(id)
+	if func_case is None:
+		return jsonify({'message': 'FuncCase not found'}), 404
+	return jsonify(func_case.to_dict())
+
+@app.route('/func_case/<int:id>', methods=['PUT'])
+def update_func_case(id):
+	func_case = FuncCase.query.get(id)
+	if func_case is None:
+		return jsonify({'message': 'FuncCase not found'}), 404
+	data = request.json
+	func_case.func_detail = data['func_detail']
+	db.session.commit()
+	return jsonify(func_case.to_dict())
+
+@app.route('/func_case/<int:id>', methods=['DELETE'])
+def delete_func_case(id):
+	func_case = FuncCase.query.get(id)
+	if func_case is None:
+		return jsonify({'message': 'FuncCase not found'}), 404
+	db.session.delete(func_case)
+	db.session.commit()
+	return jsonify({'message': 'FuncCase deleted'})
+```
+ 
+ 
+ 
+```python
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
+from sqlalchemy.orm import sessionmaker
+
+Base = declarative_base()
+
+class Case(Base):
+	__tablename__ = 'case'
+	id = Column(Integer, primary_key=True)
+	type = Column(String(50))
+	
+	__mapper_args__ = {
+		'polymorphic_identity':'case',
+		'polymorphic_on':type
+	}
+
+class FuncCase(Case):
+	__tablename__ = 'func_case'
+	id = Column(Integer, ForeignKey('case.id'), primary_key=True)
+	func_detail = Column(String(100))  # FuncCase特有的字段
+	
+	__mapper_args__ = {
+		'polymorphic_identity':'func_case',
+	}
+
+class ApiCase(Case):
+	__tablename__ = 'api_case'
+	id = Column(Integer, ForeignKey('case.id'), primary_key=True)
+	api_detail = Column(String(100))  # ApiCase特有的字段
+	
+	__mapper_args__ = {
+		'polymorphic_identity':'api_case',
+	}
+	
+```
+
+读取成字典
+```python
+# 确保已安装 pandas 和 openpyxl
+# 读取 Excel 文件
+try:
+    df = pd.read_excel('/Users/xcx/WorkSpaces/BlueFlame/flame-flask/static/func_case_template.xlsx', engine='openpyxl')
+    df = df.to_dict()
+    # 查看数据
+    for k, v in df.items():
+        print(type(k))
+        print(type(v))
+        print(k, v)
+        print('-'*80)
+except Exception as e:
+    print("Error occurred while reading Excel file:", str(e))
+```

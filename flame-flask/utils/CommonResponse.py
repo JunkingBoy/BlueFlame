@@ -66,22 +66,44 @@ class R:
         return self.to_json()
 
     def to_http_json_response(self) -> Response:
-        response = Response(self.to_json(), content_type='application/json')
+        response = Response(self.to_json(),
+                            content_type='application/json; charset=utf-8')
         response.status_code = self.code.code()
         return response
 
+    @staticmethod
+    def _default(obj):
+        if hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        raise TypeError(
+            f"Object of type {obj.__class__.__name__} is not JSON serializable"
+        )
+
     def to_json(self) -> str:
         try:
-            # 检查 data 是否可序列化
-            json_data = json.dumps({'code': self.code.code(), 'data': self.data, 'msg': self.code.msg()})
+            # 检查 data 是否可序列化, 使用 json.dumps 的 default 参数来处理自定义对象
+            json_data = json.dumps(
+                {
+                    'code': self.code.code(),
+                    'data': self.data,
+                    'msg': self.code.msg()
+                },
+                default=self._default)
             return json_data
         except TypeError as e:
+            print('-' * 80)
+            print(f'self.data type: {type(self.data)}')
+            print(f'self.data: {self.data}')
+            print('-' * 80)
             # 捕获序列化错误并打印详细信息
             print(f"Serialization error: {e}")
             return json.dumps({
-                'code': StatusCode.ERROR.code(),
-                'data': None,
-                'msg': 'An error occurred while serializing the response'
+                'code':
+                StatusCode.ERROR.code(),
+                'data':
+                None,
+                'msg':
+                'An error occurred while serializing the response'
             })
 
     @staticmethod
@@ -94,9 +116,12 @@ class R:
             # 捕获序列化错误并打印详细信息
             print(f"Serialization error: {e}")
             return json.dumps({
-                'code': StatusCode.ERROR.code(),
-                'data': None,
-                'msg': 'An error occurred while serializing the response'
+                'code':
+                StatusCode.ERROR.code(),
+                'data':
+                None,
+                'msg':
+                'An error occurred while serializing the response'
             })
 
     # 用法: R.create(999, "返回信息",  data={str or dict or array or sth can serialize by json})
@@ -105,7 +130,7 @@ class R:
         if isinstance(code, StatusCode):
             code, msg = code.code(), code.msg()
         response = Response(cls.row_to_json(code, msg, data),
-                            content_type='application/json')
+                            content_type='application/json; charset=utf-8')
         response.status_code = code
         return response
 

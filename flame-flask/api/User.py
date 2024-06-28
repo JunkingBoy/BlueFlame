@@ -3,12 +3,14 @@ from pytz import utc
 from dataclasses import dataclass, asdict
 import hashlib
 from flask import Blueprint, Response
-from flask_jwt_extended import  create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from utils.CommonResponse import R
 from flask import request
 from model.User import User, UserIdentity
+from service.UserService import get_user_indentity
 
 user = Blueprint("user", __name__)
+
 
 @user.route("/register", methods=["POST"])
 def user_register() -> Response:
@@ -18,8 +20,7 @@ def user_register() -> Response:
     3. 把加密密码写进数据库, 然后生成 jwt, 返回json
     """
     from service.UserService import UserService
-    
-    
+
     data = request.json
     if not data:
         return R.err(
@@ -31,7 +32,6 @@ def user_register() -> Response:
 
     if not isinstance(pwd, str):
         return R.err({"error": "`Password` must be a string"})
-
 
     if pwd != pwd_confirm:
         return R.err({"error": "Password not match double confirm password"})
@@ -52,10 +52,8 @@ def user_register() -> Response:
 def user_login() -> Response:
     data = request.json
     if not data:
-        return R.err({
-            "error":
-            "No data provided, `phone`, `password` are required"
-        })
+        return R.err(
+            {"error": "No data provided, `phone`, `password` are required"})
 
     phone = str(data.get("phone"))
     input_pwd = str(data.get("password"))
@@ -78,12 +76,6 @@ def user_login() -> Response:
 
     # 返回 Bearer token
     return R.ok({"token": token, "token_type": "Bearer"})
-
-
-@jwt_required()
-def get_user_indentity() -> UserIdentity:
-    identity_dict = get_jwt_identity()
-    return UserIdentity(**identity_dict)
 
 
 @user.route("/info", methods=["GET"])
