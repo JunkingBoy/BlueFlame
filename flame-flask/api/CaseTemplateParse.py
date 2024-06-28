@@ -8,10 +8,11 @@ from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 # from flask import Blueprint, send_file, request, Response, current_app
 from werkzeug.utils import secure_filename
-from flask import Blueprint,Response,  request, send_file, current_app
+from flask import Blueprint, Response, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
 case = Blueprint('case', __name__)
+
 
 @case.route('/download/case_template', methods=["GET"])
 # @jwt_required()
@@ -24,19 +25,19 @@ def download_case_template_file():
     if template_filepath != '':
         try:
             file_name: str = secure_filename(template_filepath)
-            return send_file(
-                template_filepath,
-                as_attachment=True,
-                download_name=f"{file_name}"
-            )
+            return send_file(template_filepath,
+                             as_attachment=True,
+                             download_name=f"{file_name}")
         except FileNotFoundError as err:
             current_app.logger.error(f"Can not found file: {err}")
-            return R.create(404, "File not found") 
+            return R.create(404, "File not found")
     else:
         return R.create(code=404, msg='typeError', data={})
 
+
 def is_valid_file(file):
     return '.' in file and file.rsplit('.', 1)[1].lower() in ['xlsx', 'xls']
+
 
 @case.route('/upload', methods=['POST'])
 @jwt_required()
@@ -48,7 +49,7 @@ def upload_file():
         return R.err('Missing required parameter: type')
     if 'project_id' not in request.args:
         return R.err('Missing required parameter: project_id')
-    if 'only_return_err' not in request.args:   # 1 : true,  0: false
+    if 'only_return_err' not in request.args:  # 1 : true,  0: false
         return R.err('Missing required parameter: all')
 
     case_type = request.args['type']
@@ -61,22 +62,27 @@ def upload_file():
     if not is_valid_file(file.filename):
         return R.err('Invalid file type')
 
-    case_template  = CaseTemplate(file, user_id=user_id, case_type=case_type, project_id=int(project_id))
-    # # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做, 
+    case_template = CaseTemplate(file,
+                                 user_id=user_id,
+                                 case_type=case_type,
+                                 project_id=int(project_id))
+    # # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
     # CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
 
     folder = f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}'
     if not os.path.exists(folder):
         os.makedirs(folder)
-    
+
     case_data = case_template.get_data()
     if only_return_err:
         print("only err data")
         case_data = [row for row in case_data if row.get("dirty", False)]
-        
-    with open(f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}/{case_template.user_id}.json', 'w') as out_file:
+
+    with open(
+            f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}/{case_template.user_id}.json',
+            'w') as out_file:
         json.dump(case_data, out_file, indent=2)
         out_file.flush()
         # out_file.write(str(R.ok(case_template.get_data())))
-    
+
     return R.ok("导入成功")

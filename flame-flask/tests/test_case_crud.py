@@ -6,8 +6,6 @@ Session = sessionmaker(bind=engine)
 
 session = Session()
 
-
-
 try:
     # 假设你有一个主表 MainTable 和两个附表 SubTable1 和 SubTable2
     main = MainTable(name='main')

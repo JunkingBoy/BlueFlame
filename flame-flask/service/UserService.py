@@ -9,6 +9,7 @@ class UserService:
     def create(user: User):
         user.create()
 
+
 @jwt_required()
 def get_user_indentity() -> UserIdentity:
     identity_dict = get_jwt_identity()

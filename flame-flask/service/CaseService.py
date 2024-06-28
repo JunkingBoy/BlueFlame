@@ -5,15 +5,16 @@ from model.Case import Case, FuncCase, CaseState
 from service.CaseTemplate import CaseTemplate
 from flask import current_app
 
+
 class CaseService:
 
     @staticmethod
 
-
     # TODO::UNDER_DISCUSSION<2024-06-26> 是否 FuncCase 是否循环 commit, 不满足的 Case 单次回退, 返回用户失败的数据, 返回形式待定(返回解析出错的样例)
-    def insert_data_to_db(data: list[dict[str, Any]], user_id: int, project_id: int)-> List[Dict[str, Any]] | None:
+    def insert_data_to_db(data: list[dict[str, Any]], user_id: int,
+                          project_id: int) -> List[Dict[str, Any]] | None:
         try:
-            if not data: 
+            if not data:
                 return []
             else:
                 for item in data:
@@ -30,7 +31,7 @@ class CaseService:
                         case_comment=None  # 如果有注释，可以添加
                     )
                     db.session.add(func_case)
-                
+
                 db.session.commit()
                 current_app.logger.debug("数据插入成功", exc_info=True)
         except Exception as e:

@@ -10,6 +10,7 @@ from utils.StringUtil import get_hash_as_int
 
 project = Blueprint("project", __name__)
 
+
 @project.route("/create", methods=["POST"])
 @jwt_required()
 def create_project() -> Response:
@@ -34,10 +35,11 @@ def create_project() -> Response:
             return R.err("已经存在同名项目")
         else:
             project = Project(project_id, project_name, project_desc)
-            project_user = ProjectUser(project_id, get_user_indentity().user_id)
+            project_user = ProjectUser(project_id,
+                                       get_user_indentity().user_id)
             ProjectService.create(project, project_user)
             return R.ok("项目创建成功")
-    
+
 
 @project.route("/info", methods=["GET"])
 @jwt_required()
@@ -56,6 +58,7 @@ def project_info() -> Response:
 def info(project_id: int) -> Response:
     from service.ProjectService import ProjectService
     return R.ok(ProjectService.get_project_by_project_id(project_id))
+
 
 @project.route('/user/<string:user_id>', methods=['GET'])
 @jwt_required()

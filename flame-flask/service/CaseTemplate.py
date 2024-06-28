@@ -4,7 +4,6 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from werkzeug.datastructures import FileStorage
 from flask import current_app
-from utils.FindHeader import find_header
 
 
 class CaseTemplate:
@@ -19,32 +18,30 @@ class CaseTemplate:
         self.project_id = project_id
         self.case_type = case_type
         self.data = self.parse_case_template_excel()
-        
+
     def __repr__(self) -> str:
         return f"user_id: {self.user_id}, project_id: {self.project_id}, case_type: {self.case_type}, data: {self.data}"
 
     # def save_case_template(self):
     #     # 保存用例模板到数据库
     #     # ...
-    #     current_app.logger.info(f"保存用例模板成功")    
-        
+    #     current_app.logger.info(f"保存用例模板成功")
+
     # def update_case_template(self):
     #     # 更新用例模板到数据库
     #     # ...
     #     current_app.logger.info(f"更新用例模板成功")
-        
+
     # def delete_case_template(self):
     #     # 删除用例模板
     #     # ...
-    #     current_app.logger.info(f"删除用例模板成功")        
-        
+    #     current_app.logger.info(f"删除用例模板成功")
+
     # def get_case_template(self):
     #     # 获取用例模板
     #     # ...
     #     current_app.logger.info(f"获取用例模板成功")
-                
-                
-        
+
     def to_dict(self):
         return {
             "file": self.file,
@@ -66,10 +63,10 @@ class CaseTemplate:
             sheet = workbook[sheet_name] if sheet_name else workbook.active
             headers = [
                 cell.value
-                for cell in next(sheet.iter_rows(min_row=1, max_row=1))
+                for cell in next(sheet.iter_rows(min_row=1, max_row=1)) # type: ignore
             ]
             header_dict = self.get_header_dict()
-            data = self.extract_data(sheet, headers, header_dict)
+            data = self.extract_data(sheet, headers, header_dict) # type: ignore
             return data
         except Exception as e:
             print(f"解析模板时发生错误: {str(e)}")
@@ -105,20 +102,23 @@ class CaseTemplate:
                 english_header = header_dict.get(header, header)
                 # 如果英文表头不在row_data中，则添加到row_data中
                 if english_header not in row_data:
-                    row_data[english_header] = cell_value if cell_value is not None else ""
+                    row_data[
+                        english_header] = cell_value if cell_value is not None else ""
                 else:
-                    row_data[english_header] = cell_value if cell_value is not None else row_data[english_header]
+                    row_data[
+                        english_header] = cell_value if cell_value is not None else row_data[
+                            english_header]
                 # 判断必填字段, 筛选出错误用例, 添加标识
-                if english_header in ["module", "case_name", "precondition"] and row_data[english_header] == "":
+                if english_header in ["module", "case_name", "precondition"
+                                      ] and row_data[english_header] == "":
                     row_data["dirty"] = True
                     row_data[english_header] = "required"
             data.append(row_data)
         return data
 
-
     def get_merged_cells_value(self, sheet: Worksheet) -> Dict[str, Any]:
         merged_cells_value = {}
-        for merged_range in sheet.merged_cells.ranges:
+        for merged_range in sheet.merged_cells.ranges: # type: ignore
             top_left_value = sheet.cell(merged_range.min_row,
                                         merged_range.min_col).value
             for row in range(merged_range.min_row, merged_range.max_row + 1):

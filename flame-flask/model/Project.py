@@ -46,17 +46,13 @@ class ProjectUser(db.Model):
     def __init__(self, project_id, user_id):
         self.project_id = project_id
         self.user_id = user_id
-        
-    
+
     def __repr__(self):
         return f"project_id: {self.project_id}\n, user_id: {self.user_id}\n"
-    
-    
+
     def to_dict(self) -> dict:
-        return {
-            "project_id": self.project_id,
-            "user_id": self.user_id
-        }
+        return {"project_id": self.project_id, "user_id": self.user_id}
+
 
 @dataclass
 class ProjectInfo:
@@ -67,7 +63,6 @@ class ProjectInfo:
 
     def to_dict(self) -> dict:
         return asdict(self)
-    
+
     def __repr__(self):
         return f"project_id: {self.project_id}\n, project_name: {self.project_name}\n, project_desc: {self.project_desc}, users: {self.users}\n"
-    
