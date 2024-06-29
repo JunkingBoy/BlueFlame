@@ -1,10 +1,3 @@
-'''
-Author: Lucifer
-Data: Do not edit
-LastEditors: Lucifer
-LastEditTime: 2024-07-01 19:34:37
-Description: 
-'''
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app
 from model import db
