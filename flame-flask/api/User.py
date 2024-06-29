@@ -39,13 +39,13 @@ def user_register() -> Response:
     existing_user = User.query.filter_by(phone=phone).first()
     if existing_user:
         return R.err({"error": "Phone number already registered"})
+    else:
+        pwd = hashlib.sha256(pwd.encode()).hexdigest()
 
-    pwd = hashlib.sha256(pwd.encode()).hexdigest()
+        user = User(phone=phone, password=pwd)
+        UserService.create(user)
 
-    user = User(phone=phone, password=pwd)
-    UserService.create(user)
-
-    return R.ok("用户创建成功")
+        return R.ok("用户创建成功")
 
 
 @user.route("/login", methods=["POST"])
@@ -70,12 +70,12 @@ def user_login() -> Response:
 
     if hashlib.sha256(str(input_pwd).encode()).hexdigest() != user.password:
         return R.err({"error": "Password not match(Compare DB)"})
+    else:
+        token = create_access_token(identity=UserIdentity(
+            phone=user.phone, user_id=user.user_id).to_dict())
 
-    token = create_access_token(identity=UserIdentity(
-        phone=user.phone, user_id=user.user_id).to_dict())
-
-    # 返回 Bearer token
-    return R.ok({"token": token, "token_type": "Bearer"})
+        # 返回 Bearer token
+        return R.ok({"token": token, "token_type": "Bearer"})
 
 
 @user.route("/info", methods=["GET"])
