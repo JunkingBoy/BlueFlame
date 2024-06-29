@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-01 19:30:51
+LastEditTime: 2024-07-01 19:34:37
 Description: 
 '''
 from sqlalchemy.exc import SQLAlchemyError
