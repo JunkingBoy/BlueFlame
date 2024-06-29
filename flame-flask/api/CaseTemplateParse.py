@@ -6,16 +6,15 @@ from service.CaseService import CaseService
 from service.UserService import get_user_indentity
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
-# from flask import Blueprint, send_file, request, Response, current_app
 from werkzeug.utils import secure_filename
-from flask import Blueprint, Response, request, send_file, current_app
+from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
 case = Blueprint('case', __name__)
 
 
 @case.route('/download/case_template', methods=["GET"])
-# @jwt_required()
+@jwt_required()
 def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
