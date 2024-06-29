@@ -284,3 +284,15 @@ try:
 except Exception as e:
     print("Error occurred while reading Excel file:", str(e))
 ```
+
+# 2024-06-29
+
+1. case log 记录 case 更改
+```python
+case_log
+    case_id: int
+    before: json({"name": "value", ...}) 
+    after: json({"name": "value", ...})
+    user_id: xcx
+    modify_time: 
+```
