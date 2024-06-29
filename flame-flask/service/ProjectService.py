@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Optional
 from typing import Any
-from typing import Any
+
+from sqlalchemy import func
 from model.Project import Project, ProjectUser
 from model import db
 from model.Case import Case, FuncCase, CaseState
@@ -93,6 +95,40 @@ class ProjectService:
 
             project_info: dict[str, Any] = project.to_dict()
             project_info['users'] = user_identities
+
+            project_list.append(project_info)
+
+        return project_list
+    
+    @staticmethod
+    def get_project_info_by_user_id(user_id: str) -> Optional[List[Dict[str, Any]]]:
+        project_ids: List[int] = [
+            pu.project_id
+            for pu in ProjectUser.query.filter_by(user_id=user_id).all()
+        ]
+        
+        projects: List[Project] = Project.query.filter(
+            Project.project_id.in_(project_ids)).all()
+        
+        project_list: List[Dict[str, Any]] = []
+
+        for project in projects:
+            # Count all cases for the project
+            all_case_count = db.session.query(func.count(Case.id)).filter_by(project_id=project.project_id).scalar()
+
+            # Count passed cases for the project
+            pass_case_count = db.session.query(func.count(Case.id)).join(FuncCase, Case.id == FuncCase.case_id)\
+                                  .filter(Case.project_id == project.project_id)\
+                                  .filter(FuncCase.case_state == CaseState.PASS).scalar()
+
+            project_info: Dict[str, Any] = {
+                "project_name": project.project_name,
+                "project_desc": project.project_desc,
+                "case": {
+                    "all_case": all_case_count,
+                    "pass_case": pass_case_count
+                }
+            }
 
             project_list.append(project_info)
 
