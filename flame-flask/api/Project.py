@@ -41,7 +41,7 @@ def create_project() -> Response:
             return R.ok("项目创建成功")
 
 
-@project.route("/info", methods=["GET"])
+@project.route("/all/info", methods=["GET"])
 @jwt_required()
 def project_info() -> Response:
     from service.ProjectService import ProjectService
@@ -60,17 +60,18 @@ def info(project_id: int) -> Response:
     return R.ok(ProjectService.get_project_by_project_id(project_id))
 
 
-@project.route('/user/<string:user_id>', methods=['GET'])
+@project.route('/info/', methods=['GET'])
 @jwt_required()
-def get_projects_by_user(user_id: str) -> Response:
+def get_projects_by_user() -> Response:
     from service.ProjectService import ProjectService
+    user_id = get_user_indentity().user_id
     return R.ok(ProjectService.get_project_by_user_id(user_id))
-
 
 
 @project.route('/user/case/all', methods=['GET'])
 @jwt_required()
 def get_project_case_state() -> Response:
     user_id = get_user_indentity().user_id
+    print("aa")
     from service.ProjectService import ProjectService
     return R.ok(ProjectService.get_project_info_by_user_id(user_id))
