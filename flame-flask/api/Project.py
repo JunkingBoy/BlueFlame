@@ -49,8 +49,8 @@ def project_info() -> Response:
     all_project = ProjectService.all_project()
     if not all_project:
         return R.err({"error": "No project found"})
-
-    return R.ok(all_project)
+    else:
+        return R.ok(all_project)
 
 
 @project.route('/<int:project_id>', methods=['GET'])
@@ -71,6 +71,6 @@ def get_projects_by_user() -> Response:
 @project.route('/user/case/all', methods=['GET'])
 @jwt_required()
 def get_project_case_state() -> Response:
-    user_id = get_user_indentity().user_id
     from service.ProjectService import ProjectService
+    user_id = get_user_indentity().user_id
     return R.ok(ProjectService.get_project_info_by_user_id(user_id))
