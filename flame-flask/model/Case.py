@@ -21,7 +21,7 @@ class CaseState(Enum):
 class Case(db.Model):
     __tablename__ = 'case'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    # case_id_by_user = db.Column(db.String(200), nullable=False)
+    case_id_by_user = db.Column(db.String(200), nullable=False)
     user_id = db.Column(db.String(80), nullable=False)
     project_id = db.Column(db.Integer, nullable=False)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
@@ -29,9 +29,10 @@ class Case(db.Model):
                             default=lambda: datetime.now(utc),
                             onupdate=lambda: datetime.now(utc))
 
-    def __init__(self, project_id: int, user_id: str):
+    def __init__(self, project_id: int, user_id: str, case_id_by_user: str):
         self.project_id = project_id
         self.user_id = user_id
+        self.case_id_by_user = case_id_by_user 
 
     def __repr__(self):
         return f"id: {self.id}, user_id: {self.user_id}, project_id: {self.project_id}, create_time: {self.create_time}, update_time: {self.update_time}"
