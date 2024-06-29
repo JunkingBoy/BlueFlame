@@ -1,3 +1,10 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-01 19:30:51
+Description: 
+'''
 from sqlalchemy.exc import SQLAlchemyError
 from flask import current_app
 from model import db
@@ -72,6 +79,7 @@ class CaseService:
             if not data:
                 return []
             else:
+                print("Input data:", data)
                 for item in data:
                     CaseService.validate_input_data(item)
                     existing_case = CaseService.get_existing_case(item['case_id_by_user'], project_id)

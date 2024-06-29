@@ -13,7 +13,7 @@ case_parse = Blueprint('case_parse', __name__)
 
 
 @case.route('/download/case_template', methods=["GET"])
-# @jwt_required()
+@jwt_required()
 def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
