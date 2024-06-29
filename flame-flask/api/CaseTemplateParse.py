@@ -85,4 +85,4 @@ def upload_file():
         out_file.flush()
         # out_file.write(str(R.ok(case_template.get_data())))
 
-    return R.ok("导入成功")
+    return R.ok(case_data)
