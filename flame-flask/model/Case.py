@@ -21,14 +21,14 @@ class CaseState(Enum):
 class Case(db.Model):
     __tablename__ = 'case'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String(80), nullable=False)
     project_id = db.Column(db.Integer, nullable=False)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
     update_time = db.Column(db.DateTime,
                             default=lambda: datetime.now(utc),
                             onupdate=lambda: datetime.now(utc))
 
-    def __init__(self, project_id: int, user_id: int):
+    def __init__(self, project_id: int, user_id: str):
         self.project_id = project_id
         self.user_id = user_id
 
