@@ -3,6 +3,9 @@ FROM python:3.10-slim
 # 设置工作目录为 /app
 WORKDIR /app
 
+# 设置环境变量
+ENV DOCKER_ENV "true"
+
 # 将项目中的所有文件复制到容器的 /app 目录下
 COPY . .
 
