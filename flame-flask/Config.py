@@ -13,7 +13,13 @@ def create_app() -> Flask:
     app: Flask = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = StringUtil.generate_string(32)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    
+    # 根据Docker环境变量设置数据库URI
+    if os.getenv('DOCKER_ENV') == 'true':
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = get_value_from_yaml('db_connect')
+
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     appHandler: Handler = log()

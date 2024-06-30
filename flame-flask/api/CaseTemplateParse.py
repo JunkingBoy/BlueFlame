@@ -6,16 +6,15 @@ from service.CaseService import CaseService
 from service.UserService import get_user_indentity
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
-# from flask import Blueprint, send_file, request, Response, current_app
 from werkzeug.utils import secure_filename
-from flask import Blueprint, Response, request, send_file, current_app
+from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
 case = Blueprint('case', __name__)
 
 
 @case.route('/download/case_template', methods=["GET"])
-# @jwt_required()
+@jwt_required()
 def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
@@ -52,9 +51,9 @@ def upload_file():
     if 'only_return_err' not in request.args:  # 1 : true,  0: false
         return R.err('Missing required parameter: all')
 
-    case_type = request.args['type']
-    project_id = request.args['project_id']
-    user_id = get_user_indentity().user_id
+    case_type: str = request.args['type']
+    project_id: str = request.args['project_id']
+    user_id: int = get_user_indentity().user_id
     only_return_err = True if request.args['only_return_err'] == '1' else False
     file: FileStorage = request.files['file']
     if file.filename == '' or file.filename is None:
@@ -66,8 +65,9 @@ def upload_file():
                                  user_id=user_id,
                                  case_type=case_type,
                                  project_id=int(project_id))
-    # # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
-    # CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
+    # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
+    print(f'case_template.get_data(): {case_template.get_data()}')
+    CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
 
     folder = f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}'
     if not os.path.exists(folder):
@@ -85,4 +85,4 @@ def upload_file():
         out_file.flush()
         # out_file.write(str(R.ok(case_template.get_data())))
 
-    return R.ok("导入成功")
+    return R.ok(case_data)

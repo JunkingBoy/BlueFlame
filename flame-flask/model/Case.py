@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from . import db
 from datetime import datetime
 from pytz import utc
-from dataclasses import dataclass, asdict
 from sqlalchemy import Enum as SQLEnum
 
 
@@ -21,7 +20,7 @@ class CaseState(Enum):
 class Case(db.Model):
     __tablename__ = 'case'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.String(80), nullable=False)
     project_id = db.Column(db.Integer, nullable=False)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
     update_time = db.Column(db.DateTime,
