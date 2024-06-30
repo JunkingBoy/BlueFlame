@@ -1,6 +1,5 @@
 from . import db
 from datetime import datetime
-from pytz import utc
 from dataclasses import dataclass, asdict
 
 
@@ -19,10 +18,10 @@ class User(db.Model):
     user_id = db.Column(db.String(80), unique=True, nullable=False)
     phone = db.Column(db.String(11), unique=True, nullable=False)
     password = db.Column(db.String(120), unique=False, nullable=False)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
+    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
     def __init__(self, phone, password):
         self.phone = phone

@@ -3,7 +3,6 @@ from . import db
 from flask_sqlalchemy import SQLAlchemy
 from . import db
 from datetime import datetime
-from pytz import utc
 from dataclasses import dataclass, asdict
 from sqlalchemy import Enum as SQLEnum
 
@@ -24,10 +23,10 @@ class Case(db.Model):
     case_id_by_user = db.Column(db.String(200), nullable=False)
     user_id = db.Column(db.String(80), nullable=False)
     project_id = db.Column(db.Integer, nullable=False)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
+    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
     def __init__(self, project_id: int, user_id: str, case_id_by_user: str):
         self.project_id = project_id
@@ -59,10 +58,10 @@ class FuncCase(db.Model):
                            default=CaseState.WAITING,
                            nullable=False)
     case_comment = db.Column(db.Text, nullable=True)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
+    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
     def __init__(self, case_id, case_name, case_belong_module, case_step,
                  case_except_result, case_state, case_comment):

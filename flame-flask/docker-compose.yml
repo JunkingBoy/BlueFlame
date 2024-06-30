@@ -9,7 +9,12 @@ services:
     depends_on:
       - postgres  # 如果有依赖的服务，需要在这里声明
     environment:
-      - DATABASE_URL=postgresql://postgres:test@postgres:5432/bf  # 连接 PostgreSQL 数据库的URL
+      - DB_DRIVER=postgresql
+      - DB_USER=postgres
+      - DB_PASSWORD=test
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=bf
     networks:
       - mynetwork
 
