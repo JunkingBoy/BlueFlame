@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from . import db
 from datetime import datetime
 from pytz import utc
-from dataclasses import dataclass, asdict
 from sqlalchemy import Enum as SQLEnum
 
 
@@ -28,7 +27,7 @@ class Case(db.Model):
                             default=lambda: datetime.now(utc),
                             onupdate=lambda: datetime.now(utc))
 
-    def __init__(self, project_id: int, user_id: str):
+    def __init__(self, project_id: int, user_id: int):
         self.project_id = project_id
         self.user_id = user_id
 

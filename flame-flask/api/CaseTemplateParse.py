@@ -51,9 +51,9 @@ def upload_file():
     if 'only_return_err' not in request.args:  # 1 : true,  0: false
         return R.err('Missing required parameter: all')
 
-    case_type = request.args['type']
-    project_id = request.args['project_id']
-    user_id = get_user_indentity().user_id
+    case_type: str = request.args['type']
+    project_id: str = request.args['project_id']
+    user_id: int = get_user_indentity().user_id
     only_return_err = True if request.args['only_return_err'] == '1' else False
     file: FileStorage = request.files['file']
     if file.filename == '' or file.filename is None:
