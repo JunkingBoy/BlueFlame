@@ -12,7 +12,7 @@ from werkzeug.datastructures import FileStorage
 case_parse = Blueprint('case_parse', __name__)
 
 
-@case.route('/download/case_template', methods=["GET"])
+@case_parse.route('/download/case_template', methods=["GET"])
 @jwt_required()
 def download_case_template_file():
     '''

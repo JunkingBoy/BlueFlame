@@ -1,5 +1,4 @@
 from datetime import datetime
-from pytz import utc
 from dataclasses import dataclass, asdict
 import hashlib
 from flask import Blueprint, Response
