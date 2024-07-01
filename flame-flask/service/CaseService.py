@@ -25,7 +25,7 @@ class CaseService:
     def update_existing_case(existing_case: Case, user_id: str, project_id: int, item: Dict[str, Any]) -> None:
         existing_case.user_id = user_id
         existing_case.project_id = project_id
-        existing_case.case_id_by_user = item['case_id_by_user']
+        existing_case.case_id_by_user = str(item['case_id_by_user'])
         db.session.commit()
     
     # 更新对应的 func_case
