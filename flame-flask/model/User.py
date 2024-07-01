@@ -6,7 +6,7 @@ from dataclasses import dataclass, asdict
 @dataclass
 class UserIdentity:
     phone: str
-    user_id: int
+    user_id: str
 
     def to_dict(self):
         return asdict(self)
