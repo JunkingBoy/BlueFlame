@@ -35,7 +35,7 @@ def get_value_from_yaml(key) -> Any:
     module_cwd = os.path.dirname(os.path.realpath(__file__))
     os.chdir(module_cwd)
     conf = "./config.yaml"
-    with open(conf, 'r') as stream:
+    with open(conf, 'r', encoding='utf-8') as stream:
         try:
             data = yaml.safe_load(stream)
             print('-' * 80)

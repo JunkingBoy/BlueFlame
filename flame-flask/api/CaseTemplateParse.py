@@ -6,7 +6,6 @@ from service.CaseService import CaseService
 from service.UserService import get_user_indentity
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
-from werkzeug.utils import secure_filename
 from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
@@ -27,7 +26,7 @@ def download_case_template_file():
 
     if template_filepath != '':
         try:
-            return send_file(template_filepath, as_attachment=True)
+            return send_file(template_filepath, as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         except FileNotFoundError as err:
             current_app.logger.error(f"Can not found file: {err}")
             return R.create(404, "File not found") 
