@@ -41,6 +41,48 @@ def create_project() -> Response:
             return R.ok("项目创建成功")
 
 
+@project.route("/modify", methods=["PUT"])
+@jwt_required()
+def modify_project() -> Response:
+    from service.ProjectService import ProjectService
+
+    data = request.json
+    if not data:
+        return R.err({
+            "error":
+            "No data provided, `project_name` `project_id` `project_desc` are required"
+        })
+
+    project_name = data.get("project_name")
+    project_desc = data.get("project_desc")
+    project_id = int(data.get("project_id"))
+
+    if not project_name or not project_id:
+        return R.err({"error": "`project_name` `project_id` are required"})
+    else:
+        project = Project(project_id, project_name, project_desc)
+        ok, msg = ProjectService.modify(project)
+        if ok:
+            return R.ok(msg)
+        else: 
+            return R.err(msg)
+
+
+@project.route("/delete/<int:project_id>", methods=["DELETE"])
+@jwt_required()
+def delete_project(project_id: int) -> Response:
+    print('-'*80)
+    print("hi")
+    from service.ProjectService import ProjectService
+    
+    ok, msg = ProjectService.delete(project_id)
+    print(f'msg: {msg}')
+    if ok:
+        return R.ok(msg)
+    else:
+        return R.err(msg)
+
+
 @project.route("/all/info", methods=["GET"])
 @jwt_required()
 def project_info() -> Response:
