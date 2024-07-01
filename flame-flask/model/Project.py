@@ -1,6 +1,5 @@
 from . import db
 from datetime import datetime
-from pytz import utc
 from dataclasses import dataclass, asdict
 from api.User import UserIdentity
 
@@ -11,10 +10,10 @@ class Project(db.Model):
     project_id = db.Column(db.Integer, unique=True, nullable=False)
     project_name = db.Column(db.String(200), unique=True, nullable=False)
     project_desc = db.Column(db.Text, unique=False, nullable=True)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
+    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
     def __init__(self, project_id, project_name, project_desc):
         self.project_id = project_id
@@ -40,8 +39,8 @@ class ProjectUser(db.Model):
     project_id = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.String(11), unique=False, nullable=False)
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
     def __init__(self, project_id, user_id):
         self.project_id = project_id
