@@ -284,3 +284,40 @@ try:
 except Exception as e:
     print("Error occurred while reading Excel file:", str(e))
 ```
+
+
+# 20240701
+### 确定事项
+
+##### project表字段更改
+
+加入is_delete字段 -> project表
+提供删除功能 -> 前端(double check)
+case表字段尽量不变
+case_log -> before和after
+
+必做:
+1、fix掉获取用例模板不同浏览器拿不到后缀名的bug
+2、提供编辑项目信息api
+	1、更改项目名称
+	2、更改项目描述
+3、修改/project/user/case/all接口.返回project_id
+
+
+暂定:
+1、项目邀请码邀请用户加入项目
+	1、生成project_id项目邀请链接
+	2、用户点击以后请求api确认用户是否注册
+		1、用户未注册，跳转到注册页面
+		2、用户已注册，跳转到项目页面
+# 2024-06-29
+
+1. case log 记录 case 更改
+```python
+case_log
+    case_id: int
+    before: json({"name": "value", ...}) 
+    after: json({"name": "value", ...})
+    user_id: xcx
+    modify_time: 
+```

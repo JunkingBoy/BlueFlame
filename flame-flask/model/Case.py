@@ -3,7 +3,7 @@ from . import db
 from flask_sqlalchemy import SQLAlchemy
 from . import db
 from datetime import datetime
-from pytz import utc
+from dataclasses import dataclass, asdict
 from sqlalchemy import Enum as SQLEnum
 
 
@@ -20,16 +20,18 @@ class CaseState(Enum):
 class Case(db.Model):
     __tablename__ = 'case'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    case_id_by_user = db.Column(db.String(200), nullable=False)
     user_id = db.Column(db.String(80), nullable=False)
     project_id = db.Column(db.Integer, nullable=False)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
+    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
-    def __init__(self, project_id: int, user_id: int):
+    def __init__(self, project_id: int, user_id: str, case_id_by_user: str):
         self.project_id = project_id
         self.user_id = user_id
+        self.case_id_by_user = case_id_by_user 
 
     def __repr__(self):
         return f"id: {self.id}, user_id: {self.user_id}, project_id: {self.project_id}, create_time: {self.create_time}, update_time: {self.update_time}"
@@ -53,13 +55,13 @@ class FuncCase(db.Model):
     case_step = db.Column(db.Text, nullable=True)
     case_except_result = db.Column(db.String(2048), nullable=True)
     case_state = db.Column(SQLEnum(CaseState),
-                           default=CaseState.UNKNOWN,
+                           default=CaseState.WAITING,
                            nullable=False)
     case_comment = db.Column(db.Text, nullable=True)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now(utc))
+    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(utc),
-                            onupdate=lambda: datetime.now(utc))
+                            default=lambda: datetime.now(),
+                            onupdate=lambda: datetime.now())
 
     def __init__(self, case_id, case_name, case_belong_module, case_step,
                  case_except_result, case_state, case_comment):

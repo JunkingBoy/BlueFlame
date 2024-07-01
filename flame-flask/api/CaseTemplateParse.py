@@ -6,11 +6,10 @@ from service.CaseService import CaseService
 from service.UserService import get_user_indentity
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
-from werkzeug.utils import secure_filename
 from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
-case = Blueprint('case', __name__)
+case_parse = Blueprint('case_parse', __name__)
 
 
 @case.route('/download/case_template', methods=["GET"])
@@ -19,23 +18,33 @@ def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
     '''
-    template_filepath = './static/func_case_template.xlsx'
+    cwd = os.getcwd()
+    module_cwd = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(module_cwd) # flame-flask/api
 
-    try:
-        return send_file(template_filepath, as_attachment=True)
-    except FileNotFoundError as err:
-        current_app.logger.error(f"Can not found file: {err}")
-        return R.create(404, "File not found")
+    template_filepath: str = './static/func_case_template.xlsx'
+
+    if template_filepath != '':
+        try:
+            return send_file(template_filepath, as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        except FileNotFoundError as err:
+            current_app.logger.error(f"Can not found file: {err}")
+            return R.create(404, "File not found") 
+        finally:
+            os.chdir(cwd)
+    else:
+        return R.create(code=404, msg='typeError', data={})
 
 
 def is_valid_file(file):
     return '.' in file and file.rsplit('.', 1)[1].lower() in ['xlsx', 'xls']
 
 
-@case.route('/upload', methods=['POST'])
+@case_parse.route('/upload', methods=['POST'])
 @jwt_required()
 def upload_file():
     # 检查是否提供了`type`和`project_id`和`file`必要的参数
+    # TODO<2024-06-29, @xcx> caseId 相同覆盖用例, caseId 不同新增用例
     if 'file' not in request.files:
         return R.err('No file upload')
     if 'type' not in request.args:

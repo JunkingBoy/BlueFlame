@@ -1,10 +1,20 @@
+# 加密
 cryptography==39.0.0
+
+# Flask
 Flask==3.0.3
 Flask_Cors==4.0.1
 Flask_JWT_Extended==4.6.0
 flask_sqlalchemy==3.1.1
-pytz==2020.1
+
+# yaml
 PyYAML==6.0.1
-# pandas==2.2.2
+
+# Excel
 openpyxl==3.1.4
+
+# 数据库
 psycopg2-binary==2.9.3
+
+# 表单验证
+pydantic==2.7.3
