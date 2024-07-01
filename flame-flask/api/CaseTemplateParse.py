@@ -19,17 +19,20 @@ def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
     '''
-    template_filepath = './static/func_case_template.xlsx'
+    cwd = os.getcwd()
+    module_cwd = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(module_cwd) # flame-flask/api
+
+    template_filepath: str = './static/func_case_template.xlsx'
 
     if template_filepath != '':
         try:
-            file_name: str = secure_filename(template_filepath)
-            return send_file(template_filepath,
-                             as_attachment=True,
-                             download_name=f"{file_name}")
+            return send_file(template_filepath, as_attachment=True)
         except FileNotFoundError as err:
             current_app.logger.error(f"Can not found file: {err}")
-            return R.create(404, "File not found")
+            return R.create(404, "File not found") 
+        finally:
+            os.chdir(cwd)
     else:
         return R.create(code=404, msg='typeError', data={})
 
