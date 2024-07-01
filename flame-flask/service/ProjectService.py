@@ -1,6 +1,7 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from typing import Any
-
+from flask_jwt_extended import jwt_required
+from service.UserService import get_user_indentity
 from sqlalchemy import func
 from model.Project import Project, ProjectUser
 from model import db
@@ -25,6 +26,51 @@ class ProjectService:
             db.session.rollback()
             print(f"创建项目失败: {str(e)}")
             return False
+    
+    
+    
+    @staticmethod
+    @jwt_required()
+    def modify(project: Project) -> Tuple[(bool, Optional[str])]:
+        # 先判断当前项目是否属于当前用户
+        project_user = ProjectUser.query.filter_by(project_id=project.project_id).first()
+        print(f'project_user: {project_user}')
+
+        try:
+            if project_user and project_user.user_id == get_user_indentity().user_id:
+                # 修改项目信息
+                db.session.query(Project).filter_by(project_id=project.project_id).update({
+                    'project_name': project.project_name,
+                    'project_desc': project.project_desc
+                })
+                db.session.commit()
+                return (True, "修改项目信息成功")
+            else:
+                return (False, "查无此项目, 或者您不属于这个项目")
+        except Exception as e:
+            db.session.rollback()
+            return (False, f"更改项目失败: {str(e)}")
+
+
+
+    @staticmethod
+    def delete(project_id: int) -> Tuple[bool, Optional[str]]:
+        # 先判断当前项目是否属于当前用户
+        project_user = ProjectUser.query.filter_by(project_id=project_id).first()
+        
+        try:
+            if project_user and project_user.user_id == get_user_indentity().user_id:
+                # TODO<2024-07-01, @xcx> is_del字段? 还是直接硬删除?
+                # db.session.query(Project).filter_by(project_id=project_id).update({ "is_del": 1 })
+                db.session.query(ProjectUser).filter_by(project_id=project_id).delete()
+                db.session.query(Project).filter_by(project_id=project_id).delete()
+                db.session.commit()
+                return (True, "项目信息删除成功")
+            else:
+                return (False, "查无此项目, 或者您不属于这个项目")
+        except Exception as e:
+            db.session.rollback()
+            return (False, f"删除项目失败: {str(e)}")
 
     @staticmethod
     def all_project():
@@ -99,17 +145,17 @@ class ProjectService:
             project_list.append(project_info)
 
         return project_list
-    
+
     @staticmethod
     def get_project_info_by_user_id(user_id: str) -> Optional[List[Dict[str, Any]]]:
         project_ids: List[int] = [
             pu.project_id
             for pu in ProjectUser.query.filter_by(user_id=user_id).all()
         ]
-        
+
         projects: List[Project] = Project.query.filter(
             Project.project_id.in_(project_ids)).all()
-        
+
         project_list: List[Dict[str, Any]] = []
 
         for project in projects:
