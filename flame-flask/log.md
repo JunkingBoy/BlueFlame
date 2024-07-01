@@ -310,3 +310,14 @@ case_log -> before和after
 	2、用户点击以后请求api确认用户是否注册
 		1、用户未注册，跳转到注册页面
 		2、用户已注册，跳转到项目页面
+# 2024-06-29
+
+1. case log 记录 case 更改
+```python
+case_log
+    case_id: int
+    before: json({"name": "value", ...}) 
+    after: json({"name": "value", ...})
+    user_id: xcx
+    modify_time: 
+```

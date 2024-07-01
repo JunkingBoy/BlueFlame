@@ -10,7 +10,7 @@ class CaseTemplate:
 
     def __init__(self,
                  file: FileStorage,
-                 user_id: int,
+                 user_id: str,
                  project_id: int,
                  case_type: str = ""):
         self.file = file
@@ -74,7 +74,7 @@ class CaseTemplate:
 
     def get_header_dict(self) -> Dict[str, str]:
         return {
-            '用例编号': 'case_id',
+            '用例编号': 'case_id_by_user',
             '用例名称': 'case_name',
             '测试环境': 'test_environment',
             '所属模块': 'module',

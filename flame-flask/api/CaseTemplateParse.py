@@ -9,11 +9,11 @@ from utils.CommonResponse import R
 from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
-case = Blueprint('case', __name__)
+case_parse = Blueprint('case_parse', __name__)
 
 
 @case.route('/download/case_template', methods=["GET"])
-@jwt_required()
+# @jwt_required()
 def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
@@ -40,10 +40,11 @@ def is_valid_file(file):
     return '.' in file and file.rsplit('.', 1)[1].lower() in ['xlsx', 'xls']
 
 
-@case.route('/upload', methods=['POST'])
+@case_parse.route('/upload', methods=['POST'])
 @jwt_required()
 def upload_file():
     # 检查是否提供了`type`和`project_id`和`file`必要的参数
+    # TODO<2024-06-29, @xcx> caseId 相同覆盖用例, caseId 不同新增用例
     if 'file' not in request.files:
         return R.err('No file upload')
     if 'type' not in request.args:
