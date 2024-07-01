@@ -21,17 +21,11 @@ def download_case_template_file():
     '''
     template_filepath = './static/func_case_template.xlsx'
 
-    if template_filepath != '':
-        try:
-            file_name: str = secure_filename(template_filepath)
-            return send_file(template_filepath,
-                             as_attachment=True,
-                             download_name=f"{file_name}")
-        except FileNotFoundError as err:
-            current_app.logger.error(f"Can not found file: {err}")
-            return R.create(404, "File not found")
-    else:
-        return R.create(code=404, msg='typeError', data={})
+    try:
+        return send_file(template_filepath, as_attachment=True)
+    except FileNotFoundError as err:
+        current_app.logger.error(f"Can not found file: {err}")
+        return R.create(404, "File not found")
 
 
 def is_valid_file(file):
