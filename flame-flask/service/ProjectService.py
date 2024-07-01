@@ -122,6 +122,7 @@ class ProjectService:
                                   .filter(FuncCase.case_state == CaseState.PASS).scalar()
 
             project_info: Dict[str, Any] = {
+                "project_id": project.project_id,
                 "project_name": project.project_name,
                 "project_desc": project.project_desc,
                 "case": {
