@@ -31,10 +31,10 @@ class ProjectService:
     
     @staticmethod
     @jwt_required()
-    def modify(project: Project) -> Tuple[(bool, Optional[str])]:
+    def modify(project: Project) -> Tuple[(bool, str)]:
         # 先判断当前项目是否属于当前用户
         project_user = ProjectUser.query.filter_by(project_id=project.project_id).first()
-        print(f'project_user: {project_user}')
+        current_app.logger.info(f'project_user: {project_user}')
 
         try:
             if project_user and project_user.user_id == get_user_indentity().user_id:
@@ -46,15 +46,17 @@ class ProjectService:
                 db.session.commit()
                 return (True, "修改项目信息成功")
             else:
+                current_app.logger.info("查无此项目, 或者您不属于这个项目")
                 return (False, "查无此项目, 或者您不属于这个项目")
         except Exception as e:
             db.session.rollback()
+            current_app.logger.info(f"更改项目失败: {str(e)}")
             return (False, f"更改项目失败: {str(e)}")
 
 
 
     @staticmethod
-    def delete(project_id: int) -> Tuple[bool, Optional[str]]:
+    def delete(project_id: int) -> Tuple[(bool, str)]:
         # 先判断当前项目是否属于当前用户
         project_user = ProjectUser.query.filter_by(project_id=project_id).first()
         
@@ -180,3 +182,9 @@ class ProjectService:
             project_list.append(project_info)
 
         return project_list
+
+# docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my_postgres_docker 
+# psql -h 172.20.0.2 -U postgres -W
+# docker logs flask_postgres_1 
+# docker exec -it flame-flask_postgres_1 bash
+# vim /var/lib/postgresql/data/postgresql.conf
