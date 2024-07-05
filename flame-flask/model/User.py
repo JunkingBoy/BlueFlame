@@ -41,6 +41,3 @@ class User(db.Model):
             "update_time": self.update_time.isoformat()
         }
 
-    def create(self):
-        db.session.add(self)
-        db.session.commit()

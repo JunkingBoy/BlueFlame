@@ -15,43 +15,18 @@ user = Blueprint("user", __name__)
 
 @user.route("/register", methods=["POST"])
 def user_register() -> Response:
-    """
-    1. 检查电话号码是否已经存在
-    2. 加密密码, 使用确定性hash, sha256
-    3. 把加密密码写进数据库, 然后生成 jwt, 返回json
-    """
     from service.UserService import UserService
     try:
         # 使用 Pydantic 模型进行校验
-        data = UserRegisterDTO(**request.get_json())
+        user = UserRegisterDTO(**request.get_json())
     except ValidationError as e:
-        # 如果校验失败，返回错误信息
-        # return R.err(", ".join(e.errors()[i].get("msg") for i in range(len(e.errors()))))
         return R.err(UserRegisterDTO.custom_errors(e))
-    if not data:
-        return R.err(
-            {"error": "No data provided, `Phone` and `Password` are required"})
 
-    phone = data.phone
-    pwd = data.password
-    pwd_confirm = data.password_confirm
-
-    if not isinstance(pwd, str):
-        return R.err({"error": "`Password` must be a string"})
-
-    if pwd != pwd_confirm:
-        return R.err({"error": "Password not match double confirm password"})
-
-    existing_user = User.query.filter_by(phone=phone).first()
-    if existing_user:
-        return R.err({"error": "Phone number already registered"})
-
-    pwd = hashlib.sha256(pwd.encode()).hexdigest()
-
-    user = User(phone=phone, password=pwd)
-    UserService.create(user)
-
-    return R.ok("用户创建成功")
+    result = UserService.create(user)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 @user.route("/login", methods=["POST"])
