@@ -11,6 +11,10 @@ from flask import current_app
 from service.ServiceResult import ServiceResult
 from dto.receive.ProjectDto import ProjectModifyDTO
 from sqlalchemy.orm import aliased
+from dto.response.UserDto import UserDTO
+from dto.response.ProjectDto import ProjectDTO
+# fmt: off
+# yapf: disable
 
 
 class ProjectService:
@@ -86,65 +90,68 @@ class ProjectService:
 
     @staticmethod
     def all_project() -> ServiceResult:
-        from sqlalchemy.orm import aliased
         try:
-            # 创建别名，用于手动联接查询
-            project_alias = aliased(Project)
-            project_user_alias = aliased(ProjectUser)
-            user_alias = aliased(User)
+            # 获取所有项目及其相关的用户信息
+            projects = db.session.query(Project).all()
 
-            # 联接查询获取所有项目及其相关的用户信息
-            """
-            SELECT 
-                p.id, p.project_id, p.project_name, p.project_desc, p.create_time, p.update_time, u.user_id 
-            FROM 
-                projects AS p 
-            LEFT OUTER JOIN 
-                projects_user AS pu 
-            ON 
-                p.project_id = pu.project_id 
-            LEFT OUTER JOIN 
-                "user" AS u 
-            ON 
-                pu.user_id = u.user_id
-            """
-                        "project_name": project.project_name,
-                        "project_desc": project.project_desc,
-                        "users": []
-                    }
-                if user_id:
-                    projects_dict[project.project_id]["users"].append(user_id)
+            project_list: List[ProjectDTO] = []
 
-            # 将项目字典转换为 Pydantic DTO 对象列表
-            project_list: List[ProjectDTO] = [
-                ProjectDTO(**project_info)
-                for project_info in projects_dict.values()
-            ]
+            for project in projects:
+                # 获取所有用户
+                users = db.session.query(User).join(
+                    ProjectUser, User.user_id == ProjectUser.user_id
+                ).filter(
+                    ProjectUser.project_id == project.project_id
+                ).all()
 
-            return ServiceResult.success(
-                [p.model_dump() for p in project_list])
+                user_ids = [user.user_id for user in users]
+
+                # 创建 ProjectDTO 对象
+                project_dto = ProjectDTO(
+                    project_id=project.project_id,
+                    project_name=project.project_name,
+                    project_desc=project.project_desc,
+                    users=user_ids
+                )
+
+                project_list.append(project_dto)
+
+            return ServiceResult.success([project.model_dump() for project in project_list])
         except Exception as e:
             return ServiceResult.fail(f"获取项目列表失败: {str(e)}")
 
+
+
     @staticmethod
-                    projects_dict[project.project_id]["users"].append(
-                        # 序列化 json 后嵌套太深不好解析, 不用 dto, 直接使用 str
-                        # UserDTO(user_id=user_id)
-                        user_id
-                    )
-        project = Project.query.filter_by(project_id=project_id).first()
-        if project is None:
-            return None
+    def get_project_by_project_id(project_id: str) -> ServiceResult:
+        try:
+            # 获取项目信息
+            project = Project.query.filter_by(project_id=project_id).first()
+            if project is None:
+                return ServiceResult.fail("项目不存在")
 
-        project_info: dict[str, Any] = project.to_dict()
+            # 获取项目关联的用户信息
+            users = db.session.query(User).join(
+                ProjectUser, User.user_id == ProjectUser.user_id
+            ).filter(
+                ProjectUser.project_id == project.project_id
+            ).all()
 
-        users: list[User] = db.session.query(User).join(
-            return ServiceResult.success([p.model_dump() for p in project_list])
+            # 创建 UserDTO 列表
+            user_ids = [user.user_id for user in users]
 
-        user_identities: list[str] = [user.user_id for user in users]
-        project_info['users'] = user_identities
+            # 创建 ProjectDTO 对象
+            project_dto = ProjectDTO(
+                project_id=project.project_id,
+                project_name=project.project_name,
+                project_desc=project.project_desc,
+                users=user_ids
+            )
 
-        return project_info
+            return ServiceResult.success(project_dto.dict())
+        except Exception as e:
+            return ServiceResult.fail(f"获取项目失败: {str(e)}")
+
 
     @staticmethod
     def get_project_by_user_id(user_id: str) -> list | None:
@@ -206,9 +213,5 @@ class ProjectService:
 
         return project_list
 
-
-# docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my_postgres_docker
-# psql -h 172.20.0.2 -U postgres -W
-# docker logs flask_postgres_1
-# docker exec -it flame-flask_postgres_1 bash
-# vim /var/lib/postgresql/data/postgresql.conf
+# yapf: enable
+# fmt: on
