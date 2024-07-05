@@ -3,7 +3,7 @@ import json
 import os
 from service.CaseTemplate import CaseTemplate
 from service.CaseService import CaseService
-from service.UserService import get_user_indentity
+from service.UserService import get_user_id
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from werkzeug.utils import secure_filename
@@ -54,7 +54,7 @@ def upload_file():
 
     case_type = request.args['type']
     project_id = request.args['project_id']
-    user_id = get_user_indentity().user_id
+    user_id = get_user_id()
     only_return_err = True if request.args['only_return_err'] == '1' else False
     file: FileStorage = request.files['file']
     if file.filename == '' or file.filename is None:
