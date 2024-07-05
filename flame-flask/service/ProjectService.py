@@ -24,7 +24,7 @@ class ProjectService:
             p = Project(**project.model_dump())
             pu = ProjectUser(project_id=project.project_id, user_id=user_id)
 
-            existd = Project.query.filter_by(project_id=p.id).first()
+            existd = Project.query.filter_by(project_id=p.project_id).first()
             if existd:
                 return ServiceResult.fail("已经存在同名项目")
 
