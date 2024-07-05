@@ -68,11 +68,15 @@ def project_info() -> Response:
         return R.err(result.content)
 
 
-@bf_project.route('/<int:project_id>', methods=['GET'])
+@bf_project.route('/<string:project_id>', methods=['GET'])
 @jwt_required()
-def info(project_id: int) -> Response:
+def info(project_id: str) -> Response:
     from service.ProjectService import ProjectService
-    return R.ok(ProjectService.get_project_by_project_id(project_id))
+    result = ProjectService.get_project_by_project_id(project_id)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 @bf_project.route('/info/', methods=['GET'])
@@ -80,7 +84,11 @@ def info(project_id: int) -> Response:
 def get_projects_by_user() -> Response:
     from service.ProjectService import ProjectService
     user_id = get_user_id()
-    return R.ok(ProjectService.get_project_by_user_id(user_id))
+    result = ProjectService.get_project_by_user_id(user_id)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 @bf_project.route('/user/case/all', methods=['GET'])

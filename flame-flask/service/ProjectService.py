@@ -154,28 +154,49 @@ class ProjectService:
 
 
     @staticmethod
-    def get_project_by_user_id(user_id: str) -> list | None:
-        project_ids: list[int] = [
-            pu.project_id
-            for pu in ProjectUser.query.filter_by(user_id=user_id).all()
-        ]
-        projects: list[Project] = Project.query.filter(
-            Project.project_id.in_(project_ids)).all()
-        project_list: list[dict[str, Any]] = []
+    def get_project_by_user_id(user_id: str) -> ServiceResult:
+        try:
+            # 获取用户关联的项目 ID 列表
+            project_ids: List[str] = [
+                pu.project_id
+                for pu in ProjectUser.query.filter_by(user_id=user_id).all()
+            ]
 
-        for project in projects:
-            users: list[User] = db.session.query(User).join(
-                ProjectUser, User.user_id == ProjectUser.user_id).filter(
-                    ProjectUser.project_id == project.project_id).all()
-            user_identities: list[str] = [user.user_id for user in users]
+            if not project_ids:
+                return ServiceResult.fail("No projects found for this user.")
 
-            project_info: dict[str, Any] = project.to_dict()
-            project_info['users'] = user_identities
+            # 获取项目信息
+            projects: List[Project] = Project.query.filter(
+                Project.project_id.in_(project_ids)).all()
 
-            project_list.append(project_info)
+            # 构建项目信息列表
+            project_list: List[ProjectDTO] = []
 
-        return project_list
+            for project in projects:
+                # 获取所有用户身份
+                users: List[User] = db.session.query(User).join(
+                        ProjectUser, User.user_id == ProjectUser.user_id
+                    ).filter(
+                        ProjectUser.project_id == project.project_id
+                    ).all()
 
+                user_ids = [user.user_id for user in users]
+
+                # 创建 ProjectDTO 对象
+                project_dto = ProjectDTO(
+                    project_id=project.project_id,
+                    project_name=project.project_name,
+                    project_desc=project.project_desc,
+                    users=user_ids
+                )
+
+                project_list.append(project_dto)
+
+            return ServiceResult.success([project.model_dump() for project in project_list])
+        except Exception as e:
+            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}")
+            return ServiceResult.fail(f"Failed to get projects: {str(e)}") 
+        
     @staticmethod
     def get_project_info_by_user_id(
             user_id: str) -> Optional[List[Dict[str, Any]]]:
