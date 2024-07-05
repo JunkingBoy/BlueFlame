@@ -1,12 +1,8 @@
-from datetime import datetime
-from dataclasses import dataclass, asdict
-import hashlib
 from flask import Blueprint, Response
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
-from model.User import User, UserIdentity
 from service.UserService import get_user_indentity
 from dto.receive.UserDto import UserRegisterDTO
 
@@ -38,13 +34,11 @@ def user_login() -> Response:
     except ValidationError as e:
         return R.err(UserLoginDTO.custom_errors(e))
 
-    result =  UserService.login(user)
+    result = UserService.login(user)
     if result.ok:
         return R.ok(result.content)
     else:
         return R.err(result.content)
-
-
 
 
 @bf_user.route("/info", methods=["GET"])
