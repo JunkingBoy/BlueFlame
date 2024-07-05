@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
-from service.UserService import get_user_indentity
+from service.UserService import get_user_id
 from dto.receive.UserDto import UserRegisterDTO
 
 bf_user = Blueprint("user", __name__)
@@ -44,4 +44,4 @@ def user_login() -> Response:
 @bf_user.route("/info", methods=["GET"])
 @jwt_required()
 def user_info():
-    return R.ok(get_user_indentity().to_dict())
+    return R.ok(get_user_id())
