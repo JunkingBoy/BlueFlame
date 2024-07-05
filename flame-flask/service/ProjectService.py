@@ -86,9 +86,9 @@ class ProjectService:
 
     @staticmethod
     def all_project() -> ServiceResult:
-        from dto.response.ProjectDto import ProjectDTO
+        from sqlalchemy.orm import aliased
         try:
-            # 创建一个别名，用于手动联接查询
+            # 创建别名，用于手动联接查询
             project_alias = aliased(Project)
             project_user_alias = aliased(ProjectUser)
             user_alias = aliased(User)
@@ -108,20 +108,6 @@ class ProjectService:
             ON 
                 pu.user_id = u.user_id
             """
-            projects_query = (db.session.query(
-                project_alias, user_alias.user_id).outerjoin(
-                    project_user_alias, project_alias.project_id ==
-                    project_user_alias.project_id).outerjoin(
-                        user_alias,
-                        project_user_alias.user_id == user_alias.user_id))
-
-            # 构建一个临时的字典，用于存储项目及其用户信息
-            projects_dict: Dict[str, Dict[str, Any]] = {}
-
-            for project, user_id in projects_query:
-                if project.project_id not in projects_dict:
-                    projects_dict[project.project_id] = {
-                        "project_id": project.project_id,
                         "project_name": project.project_name,
                         "project_desc": project.project_desc,
                         "users": []
@@ -141,7 +127,11 @@ class ProjectService:
             return ServiceResult.fail(f"获取项目列表失败: {str(e)}")
 
     @staticmethod
-    def get_project_by_project_id(project_id: int) -> dict | None:
+                    projects_dict[project.project_id]["users"].append(
+                        # 序列化 json 后嵌套太深不好解析, 不用 dto, 直接使用 str
+                        # UserDTO(user_id=user_id)
+                        user_id
+                    )
         project = Project.query.filter_by(project_id=project_id).first()
         if project is None:
             return None
@@ -149,8 +139,7 @@ class ProjectService:
         project_info: dict[str, Any] = project.to_dict()
 
         users: list[User] = db.session.query(User).join(
-            ProjectUser, User.user_id == ProjectUser.user_id).filter(
-                ProjectUser.project_id == project.project_id).all()
+            return ServiceResult.success([p.model_dump() for p in project_list])
 
         user_identities: list[str] = [user.user_id for user in users]
         project_info['users'] = user_identities
