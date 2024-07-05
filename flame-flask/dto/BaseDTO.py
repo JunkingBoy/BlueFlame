@@ -18,5 +18,5 @@ class BaseDTO(BaseModel):
         return errors[0] if len(errors) == 1 else errors
 
     class Config:
-        anystr_strip_whitespace = True
+        str_strip_whitespace = True
         use_enum_values = True

@@ -539,38 +539,3 @@ case_detail_tag:
 _tag_case_id_list:
 	[case_id1, case_id2, ...]
 <!-- ------------------------------------------------------------------------- -->
-
-
-
-
-
-
-
-
-i: [
-		{
-		name: str
-		test_env: str
-		}
-		{
-		name: str
-		test_env: str
-		}
-		{
-		name: str
-		test_env: str
-		}
-		{
-		name: str
-		test_env: str
-		}
-		{
-		name: str
-		test_env: str
-		}
-	]
-
-i: {
-	name: str
-	test_env: str
-}

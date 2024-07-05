@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 
 
 class Project(db.Model):
-    __tablename__ = 'projects'
+    __tablename__ = 'project'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     project_id = db.Column(db.String(16), unique=True, nullable=False)
     project_name = db.Column(db.String(200), unique=True, nullable=False)
@@ -33,7 +33,7 @@ class Project(db.Model):
 
 
 class ProjectUser(db.Model):
-    __tablename__ = 'projects_user'
+    __tablename__ = 'project_user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     project_id = db.Column(db.String(16), nullable=False)
     user_id = db.Column(db.String(16), unique=False, nullable=False)
