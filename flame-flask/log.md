@@ -296,3 +296,281 @@ case_log
     user_id: xcx
     modify_time: 
 ```
+
+
+
+
+
+### plan 2024-07-05
+
+<!-- ------------------------------------------------------------------------- -->
+plan CRUD
+<!-- ------------------------------------------------------------------------- -->
+create_plan(POST):
+	input: {
+		project_id: int
+		plan_name: str
+		start_time: date
+		end_time: date
+		user_id: from jwt
+	}
+	output: {
+		"data": <plan_id: int> if success else <error_msg: str>
+	}
+	
+modify_plan(PUT):
+	input: {
+		plan_name: str
+		start_time: date
+		end_time: date
+	}
+	output: {
+		"msg": str
+	}
+
+delete_plan(DELETE):
+	input:  {
+		plan_id: int
+	}
+	output: {
+		"msg": str
+	}
+
+all_plan(GET):
+	input: {
+		user_id: from jwt
+		project_id: int
+	}
+	output: {
+		"data": [
+			{
+				"plan_id": int,
+				"plan_name": str,
+				"start_time": date,
+				"end_time": date,
+				"case_ids": list<int>,
+			}	
+			...
+		]
+	}
+
+<!-- ------------------------------------------------------------------------- -->
+about plan'case CRUD
+<!-- ------------------------------------------------------------------------- -->
+
+append_plan_case(POST):
+	i: {
+		plan_id: int
+		case_ids: list<id: int>
+	}
+	o: {
+		 "msg": str
+	}
+	
+delete_plan_case(DELETE):
+	i: {
+		plan_id: int
+		case_ids: list<id: int>
+	}
+	o: {
+		 "msg": str
+	}
+	
+
+modify_plan_case(PUT):
+	I: {
+		plan_id: int
+		case_ids: list<int>
+	}
+	o: {
+		"msg": str
+	}
+
+获取一个项目下的一个plan下的所有case
+get_plan_case(GET):
+	i: {
+		plan_id: int
+	}
+	o: {
+		"data": [
+			{
+				"plan_case_id": int,
+				"case_name": str,
+				"case_type": str,
+				"case_detail": str,
+			}
+			...
+		]
+	}
+
+
+
+
+
+
+
+-------------------------------------------------------------------------
+
+<!-- case CRUD  -->
+
+-------------------------------------------------------------------------
+
+creage_case(POST):
+	input: {
+		case_type: str
+		case_detail: json
+		user_id: from jwt
+		project_id: int
+		plan_id: int
+	}
+	output: {
+		
+	}
+	
+modify_case(PUT):
+	input: {
+		case_id: int
+		case_detail: json
+	}
+	output: {
+		"msg": str
+	}
+
+delete_case(DELETE):
+	input:  {
+		case_id: int
+	}
+	output: {
+		"msg": str
+	}
+
+all_case(GET):
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ------------------------------------------------------------------------- -->
+plan 相关的数据表设计
+<!-- ------------------------------------------------------------------------- -->
+
+project表:
+	id: int
+	project_id: int, 
+	project_name: str, 
+	project_desc: str, 
+	create_time: date, 
+	update_time: date
+
+plan表: 
+	id: int
+	project_id: int
+	plan_name: str
+	start_time: date
+	end_time: date
+	user_id: str
+	create_time: date
+	update_time: date
+
+plan_case表:
+	id: int
+	plan_id: int
+	case_id: int json                   #_tag_case_id_list
+	create_time: date
+	update_time: date
+
+case表:
+	id: int
+	case_id_by_user: str    
+	case_type: str                #enum{func_case, api_case}
+	case_detail: json             #_tag_case_detail
+	cast_state: enum,             #_tag_case_state_enum
+	user_id: str
+	project_id: int
+	create_time: date
+	update_time: date
+
+user表:
+	id: int
+	user_id: str, 
+	phone: str
+	pwd: str
+	create_time: date, 
+	update_time: date
+
+project_user表:
+	id: int
+	project_id: int
+	user_id: str
+	update_time: date
+
+ 
+<!-- ------------------------------------------------------------------------- -->
+备注
+case_detail_tag:
+
+	func_case
+	{
+			case_name: str
+		"test_env": str,
+		"belong_model": str,
+		"expected_result": str,
+		"test_step": str, 
+	},
+
+	api_case
+	{
+		"api_name": str,
+		"api_url": str,
+		"api_method": str,
+		"api_params": str,
+		"api_return": str,
+		"api_desc": str,
+	}
+	
+	
+_tag_case_id_list:
+	[case_id1, case_id2, ...]
+<!-- ------------------------------------------------------------------------- -->
+
+
+
+
+
+
+
+
+i: [
+		{
+		name: str
+		test_env: str
+		}
+		{
+		name: str
+		test_env: str
+		}
+		{
+		name: str
+		test_env: str
+		}
+		{
+		name: str
+		test_env: str
+		}
+		{
+		name: str
+		test_env: str
+		}
+	]
+
+i: {
+	name: str
+	test_env: str
+}
