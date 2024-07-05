@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, constr, field_validator
+from pydantic import Field, field_validator
 from typing import Annotated
 from dto.BaseDTO import BaseDTO 
 
@@ -55,7 +55,28 @@ class UserRegisterDTO(BaseDTO):
         
 
 
+class UserLoginDTO(BaseDTO):
+    phone: Annotated[
+        str,
+        Field(min_length=11, max_length=11, description="User's phone number")
+    ]
+    password: Annotated[
+        str,
+        Field(min_length=6, max_length=128, description="User's password")
+    ]
 
-class OutputDTO(BaseModel):
-    success: bool
-    message: str
+    @field_validator('phone')
+    def check_phone_length(cls, v):
+        if not isinstance(v, str):
+            raise ValueError('Phone must be a string')
+        if len(v) != 11:
+            raise ValueError('Phone number must be exactly 11 digits long')
+        return v
+
+    @field_validator('password')
+    def check_password_length(cls, v):
+        if not isinstance(v, str):
+            raise ValueError('Password must be a string')
+        if len(v) < 6 or len(v) > 128:
+            raise ValueError('Password must be between 6 and 128 characters long')
+        return v
