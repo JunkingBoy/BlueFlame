@@ -65,26 +65,27 @@ class ProjectService:
             return ServiceResult.fail(f"更改项目失败: {str(e)}")
 
     @staticmethod
-    def delete(project_id: int) -> Tuple[(bool, str)]:
-        # 先判断当前项目是否属于当前用户
-        project_user = ProjectUser.query.filter_by(
-            project_id=project_id).first()
-
+    def delete(project_id: str) -> ServiceResult:
         try:
-            if project_user and project_user.user_id == get_user_id():
-                # TODO<2024-07-01, @xcx> is_del字段? 还是直接硬删除?
-                # db.session.query(Project).filter_by(project_id=project_id).update({ "is_del": 1 })
-                db.session.query(ProjectUser).filter_by(
-                    project_id=project_id).delete()
-                db.session.query(Project).filter_by(
-                    project_id=project_id).delete()
-                db.session.commit()
-                return (True, "项目信息删除成功")
-            else:
-                return (False, "查无此项目, 或者您不属于这个项目")
+            user_id = get_user_id()
+            # 查询项目用户关系，判断当前用户是否属于项目成员
+            project_users = db.session.query(ProjectUser).filter_by(
+                project_id=project_id).all()
+            is_my_project = any(pu.user_id == user_id for pu in project_users)
+
+            if not is_my_project:
+                return ServiceResult.fail("查无此项目或者您不属于这个项目")
+
+            # TODO<2024-07-01, @xcx> is_del字段? 还是直接硬删除?
+            # db.session.query(Project).filter_by(project_id=project_id).update({ "is_del": 1 })
+            db.session.query(ProjectUser).filter_by(
+                project_id=project_id).delete(synchronize_session=False)
+            db.session.query(Project).filter_by(project_id=project_id).delete()
+            db.session.commit()
+            return ServiceResult.success("项目信息删除成功")
         except Exception as e:
             db.session.rollback()
-            return (False, f"删除项目失败: {str(e)}")
+            return ServiceResult.fail(f"删除项目失败: {str(e)}")
 
     @staticmethod
     def all_project():

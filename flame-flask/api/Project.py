@@ -4,7 +4,6 @@ from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
 from service.UserService import get_user_id 
-from model.Project import Project, ProjectUser
 
 bf_project = Blueprint("project", __name__)
 
@@ -45,19 +44,16 @@ def modify_project() -> Response:
 
 
 
-@bf_project.route("/delete/<int:project_id>", methods=["DELETE"])
+@bf_project.route("/delete/<string:project_id>", methods=["DELETE"])
 @jwt_required()
-def delete_project(project_id: int) -> Response:
-    print('-'*80)
-    print("hi")
+def delete_project(project_id: str) -> Response:
     from service.ProjectService import ProjectService
     
-    ok, msg = ProjectService.delete(project_id)
-    print(f'msg: {msg}')
-    if ok:
-        return R.ok(msg)
+    result = ProjectService.delete(project_id)
+    if result.ok:
+        return R.ok(result.content)
     else:
-        return R.err(msg)
+        return R.err(result.content)
 
 
 @bf_project.route("/all/info", methods=["GET"])
