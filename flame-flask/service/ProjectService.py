@@ -1,6 +1,5 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from dto.receive.ProjectDto import ProjectCreateDTO
-from typing import Any
 from flask_jwt_extended import jwt_required
 from service.UserService import get_user_id
 from sqlalchemy import func
@@ -8,12 +7,10 @@ from model.Project import Project, ProjectUser
 from model import db
 from model.Case import Case, FuncCase, CaseState
 from model.User import User
-from service.CaseTemplate import CaseTemplate
 from flask import current_app
-from model.Project import ProjectInfo
-from utils.CommonResponse import R
 from service.ServiceResult import ServiceResult
 from dto.receive.ProjectDto import ProjectModifyDTO
+from sqlalchemy.orm import aliased
 
 
 class ProjectService:
@@ -88,29 +85,60 @@ class ProjectService:
             return ServiceResult.fail(f"删除项目失败: {str(e)}")
 
     @staticmethod
-    def all_project():
-        projects: list[Project] = Project.query.all()
-        project_list: list[dict[str, Any]] = []
+    def all_project() -> ServiceResult:
+        from dto.response.ProjectDto import ProjectDTO
+        try:
+            # 创建一个别名，用于手动联接查询
+            project_alias = aliased(Project)
+            project_user_alias = aliased(ProjectUser)
+            user_alias = aliased(User)
 
-        for project in projects:
-            query = db.session.query(User).join(
-                ProjectUser, User.user_id == ProjectUser.user_id).filter(
-                    ProjectUser.project_id == project.project_id)
-            print('-' * 80)
-            print(str(query.statement))  # 对应 sql
-            print('-' * 80)
-            users: list[User] = query.all()
-            user_identities: list[str] = [user.user_id for user in users]
+            # 联接查询获取所有项目及其相关的用户信息
+            """
+            SELECT 
+                p.id, p.project_id, p.project_name, p.project_desc, p.create_time, p.update_time, u.user_id 
+            FROM 
+                projects AS p 
+            LEFT OUTER JOIN 
+                projects_user AS pu 
+            ON 
+                p.project_id = pu.project_id 
+            LEFT OUTER JOIN 
+                "user" AS u 
+            ON 
+                pu.user_id = u.user_id
+            """
+            projects_query = (db.session.query(
+                project_alias, user_alias.user_id).outerjoin(
+                    project_user_alias, project_alias.project_id ==
+                    project_user_alias.project_id).outerjoin(
+                        user_alias,
+                        project_user_alias.user_id == user_alias.user_id))
 
-            project_info: dict[str, Any] = project.to_dict()
-            project_info['users'] = user_identities
+            # 构建一个临时的字典，用于存储项目及其用户信息
+            projects_dict: Dict[str, Dict[str, Any]] = {}
 
-            project_list.append(project_info)
+            for project, user_id in projects_query:
+                if project.project_id not in projects_dict:
+                    projects_dict[project.project_id] = {
+                        "project_id": project.project_id,
+                        "project_name": project.project_name,
+                        "project_desc": project.project_desc,
+                        "users": []
+                    }
+                if user_id:
+                    projects_dict[project.project_id]["users"].append(user_id)
 
-        print('-' * 80)
-        print(f'project_list: {project_list}')
-        print('-' * 80)
-        return project_list
+            # 将项目字典转换为 Pydantic DTO 对象列表
+            project_list: List[ProjectDTO] = [
+                ProjectDTO(**project_info)
+                for project_info in projects_dict.values()
+            ]
+
+            return ServiceResult.success(
+                [p.model_dump() for p in project_list])
+        except Exception as e:
+            return ServiceResult.fail(f"获取项目列表失败: {str(e)}")
 
     @staticmethod
     def get_project_by_project_id(project_id: int) -> dict | None:

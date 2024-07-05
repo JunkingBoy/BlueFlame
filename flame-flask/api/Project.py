@@ -61,11 +61,11 @@ def delete_project(project_id: str) -> Response:
 def project_info() -> Response:
     from service.ProjectService import ProjectService
 
-    all_project = ProjectService.all_project()
-    if not all_project:
-        return R.err({"error": "No project found"})
-
-    return R.ok(all_project)
+    result = ProjectService.all_project()
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 @bf_project.route('/<int:project_id>', methods=['GET'])
