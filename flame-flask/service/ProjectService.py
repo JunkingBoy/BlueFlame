@@ -12,7 +12,11 @@ from service.ServiceResult import ServiceResult
 from dto.receive.ProjectDto import ProjectModifyDTO
 from sqlalchemy.orm import aliased
 from dto.response.UserDto import UserDTO
-from dto.response.ProjectDto import ProjectDTO
+from dto.response.ProjectDto import ProjectDTO, ProjectCaseInfoDTO
+from dto.response.CaseDto import CaseCountDTO
+from sqlalchemy import cast, String
+
+
 # fmt: off
 # yapf: disable
 
@@ -198,41 +202,57 @@ class ProjectService:
             return ServiceResult.fail(f"Failed to get projects: {str(e)}") 
         
     @staticmethod
-    def get_project_info_by_user_id(
-            user_id: str) -> Optional[List[Dict[str, Any]]]:
-        project_ids: List[int] = [
-            pu.project_id
-            for pu in ProjectUser.query.filter_by(user_id=user_id).all()
-        ]
+    def get_project_case_info_by_user_id(user_id: str) -> ServiceResult:
+        try:
+            # 获取用户关联的项目 ID 列表
+            project_ids: List[str] = [
+                pu.project_id
+                for pu in ProjectUser.query.filter_by(user_id=user_id).all()
+            ]
 
-        projects: List[Project] = Project.query.filter(
-            Project.project_id.in_(project_ids)).all()
+            if not project_ids:
+                return ServiceResult.fail("No projects found for this user.")
 
-        project_list: List[Dict[str, Any]] = []
+            # 获取项目信息
+            projects: List[Project] = Project.query.filter(
+                Project.project_id.in_(project_ids)).all()
 
-        for project in projects:
-            # Count all cases for the project
-            all_case_count = db.session.query(func.count(
-                Case.id)).filter_by(project_id=project.project_id).scalar()
+            project_list: List[ProjectCaseInfoDTO] = []
 
-            # Count passed cases for the project
-            pass_case_count = db.session.query(func.count(Case.id)).join(FuncCase, Case.id == FuncCase.case_id)\
-                                  .filter(Case.project_id == project.project_id)\
-                                  .filter(FuncCase.case_state == CaseState.PASS).scalar()
+            for project in projects:
+                # 计算项目的所有案例
+                all_case_count = db.session.query(
+                    func.count(Case.id)).filter_by(project_id=project.project_id).scalar()
 
-            project_info: Dict[str, Any] = {
-                "project_id": project.project_id,
-                "project_name": project.project_name,
-                "project_desc": project.project_desc,
-                "case": {
-                    "all_case": all_case_count,
-                    "pass_case": pass_case_count
-                }
-            }
+                # 数该项目通过状态的案例
+                pass_case_count = db.session.query(func.count(Case.id)).join(
+                    FuncCase, Case.id == FuncCase.case_id
+                ).filter(
+                    cast(Case.project_id, String) == cast(project.project_id, String)
 
-            project_list.append(project_info)
+                ).filter(
+                    FuncCase.case_state == CaseState.PASS
+                ).scalar()
 
-        return project_list
+                case_info = CaseCountDTO(
+                    all_case=all_case_count,
+                    pass_case=pass_case_count
+                )
+
+                project_info = ProjectCaseInfoDTO(
+                    project_id=project.project_id,
+                    project_name=project.project_name,
+                    project_desc=project.project_desc,
+                    case=case_info
+                )
+
+                project_list.append(project_info)
+
+            return ServiceResult.success([project.model_dump() for project in project_list])
+        except Exception as e:
+            current_app.logger.error(f"Failed to get project case info for user {user_id}: {str(e)}")
+            return ServiceResult.fail(f"Failed to get project case info: {str(e)}")
+
 
 # yapf: enable
 # fmt: on

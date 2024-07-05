@@ -95,6 +95,9 @@ def get_projects_by_user() -> Response:
 @jwt_required()
 def get_project_case_state() -> Response:
     user_id = get_user_id()
-    print("aa")
     from service.ProjectService import ProjectService
-    return R.ok(ProjectService.get_project_info_by_user_id(user_id))
+    result = ProjectService.get_project_case_info_by_user_id(user_id)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
