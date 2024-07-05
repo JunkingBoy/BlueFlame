@@ -1,30 +1,21 @@
 from pydantic import BaseModel, ValidationError
 from typing import Any, Dict, List
 
+
 class BaseDTO(BaseModel):
-    @classmethod
-    def custom_errors(cls, e: ValidationError) -> List[Dict[str, Any]]:
+
+    @staticmethod
+    def custom_errors(e: ValidationError) -> List[Dict[str, Any]] | Dict[str, Any]:
         """
         处理 ValidationError 并返回自定义错误消息格式
         """
-        return [
-            {
-                "type": error["type"],
-                "loc": error["loc"],
-                "msg": error["msg"]
-            }
-            for error in e.errors()
-        ]
-
-    @classmethod
-    def validate_json(cls, data: Dict[str, Any]) -> 'BaseDTO':
-        """
-        使用 Pydantic 模型进行校验
-        """
-        try:
-            return cls(**data)
-        except ValidationError as e:
-            raise ValueError(cls.custom_errors(e))
+        errors = [{
+            "msg": error["msg"],
+            "loc": error["loc"],
+            "type": error["type"]
+        } for error in e.errors()]
+        # 如果只有一个错误对象，不要包裹在列表中
+        return errors[0] if len(errors) == 1 else errors
 
     class Config:
         anystr_strip_whitespace = True

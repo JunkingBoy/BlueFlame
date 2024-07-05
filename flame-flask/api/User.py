@@ -3,10 +3,12 @@ from dataclasses import dataclass, asdict
 import hashlib
 from flask import Blueprint, Response
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
 from model.User import User, UserIdentity
 from service.UserService import get_user_indentity
+from dto.receive.UserDto import UserRegisterDTO
 
 user = Blueprint("user", __name__)
 
@@ -19,15 +21,20 @@ def user_register() -> Response:
     3. 把加密密码写进数据库, 然后生成 jwt, 返回json
     """
     from service.UserService import UserService
-
-    data = request.json
+    try:
+        # 使用 Pydantic 模型进行校验
+        data = UserRegisterDTO(**request.get_json())
+    except ValidationError as e:
+        # 如果校验失败，返回错误信息
+        # return R.err(", ".join(e.errors()[i].get("msg") for i in range(len(e.errors()))))
+        return R.err(UserRegisterDTO.custom_errors(e))
     if not data:
         return R.err(
             {"error": "No data provided, `Phone` and `Password` are required"})
 
-    phone = str(data.get("phone"))
-    pwd = data.get("password")
-    pwd_confirm = str(data.get("password_confirm"))
+    phone = data.phone
+    pwd = data.password
+    pwd_confirm = data.password_confirm
 
     if not isinstance(pwd, str):
         return R.err({"error": "`Password` must be a string"})
