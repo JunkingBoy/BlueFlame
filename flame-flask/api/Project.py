@@ -1,74 +1,51 @@
-from datetime import datetime
 from flask import Blueprint, Response
 from flask_jwt_extended import jwt_required
+from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
-from service.UserService import get_user_indentity
+from service.UserService import get_user_id 
 from model.Project import Project, ProjectUser
-from service.UserService import get_user_indentity
-from utils.StringUtil import get_hash_as_int
 
-project = Blueprint("project", __name__)
+bf_project = Blueprint("project", __name__)
 
 
-@project.route("/create", methods=["POST"])
+@bf_project.route("/create", methods=["POST"])
 @jwt_required()
 def create_project() -> Response:
     from service.ProjectService import ProjectService
+    from dto.receive.ProjectDto import ProjectCreateDTO
 
-    data = request.json
-    if not data:
-        return R.err(
-            {"error": "No data provided, `project_name` are required"})
+    try:
+        project = ProjectCreateDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(ProjectCreateDTO.custom_errors(e))
 
-    project_name = str(data.get("project_name"))
-    project_desc = str(data.get("project_desc"))
-
-    if not project_name or not project_desc:
-        return R.err({"error": "`project_name` are required"})
+    result = ProjectService.create(project, get_user_id())
+    if result.ok:
+        return R.ok(result.content)
     else:
-        # 空name处理
-        project_id = get_hash_as_int(project_name)
-
-        existd = Project.query.filter_by(project_id=project_id).first()
-        if existd:
-            return R.err("已经存在同名项目")
-        else:
-            project = Project(project_id, project_name, project_desc)
-            project_user = ProjectUser(project_id,
-                                       get_user_indentity().user_id)
-            ProjectService.create(project, project_user)
-            return R.ok("项目创建成功")
+        return R.err(result.content)
 
 
-@project.route("/modify", methods=["PUT"])
+@bf_project.route("/modify", methods=["PUT"])
 @jwt_required()
 def modify_project() -> Response:
     from service.ProjectService import ProjectService
+    from dto.receive.ProjectDto import ProjectModifyDTO 
+    try:
+        project = ProjectModifyDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(ProjectModifyDTO.custom_errors(e))
 
-    data = request.json
-    if not data:
-        return R.err({
-            "error":
-            "No data provided, `project_name` `project_id` `project_desc` are required"
-        })
-
-    project_name = data.get("project_name")
-    project_desc = data.get("project_desc")
-    project_id = int(data.get("project_id"))
-
-    if not project_name or not project_id:
-        return R.err({"error": "`project_name` `project_id` are required"})
+    result = ProjectService.modify(project)
+    if result.ok:
+        return R.ok(result.content)
     else:
-        project = Project(project_id, project_name, project_desc)
-        ok, msg = ProjectService.modify(project)
-        if ok:
-            return R.ok(msg)
-        else: 
-            return R.err(msg)
+        return R.err(result.content)
 
 
-@project.route("/delete/<int:project_id>", methods=["DELETE"])
+
+@bf_project.route("/delete/<int:project_id>", methods=["DELETE"])
 @jwt_required()
 def delete_project(project_id: int) -> Response:
     print('-'*80)
@@ -83,7 +60,7 @@ def delete_project(project_id: int) -> Response:
         return R.err(msg)
 
 
-@project.route("/all/info", methods=["GET"])
+@bf_project.route("/all/info", methods=["GET"])
 @jwt_required()
 def project_info() -> Response:
     from service.ProjectService import ProjectService
@@ -95,25 +72,25 @@ def project_info() -> Response:
     return R.ok(all_project)
 
 
-@project.route('/<int:project_id>', methods=['GET'])
+@bf_project.route('/<int:project_id>', methods=['GET'])
 @jwt_required()
 def info(project_id: int) -> Response:
     from service.ProjectService import ProjectService
     return R.ok(ProjectService.get_project_by_project_id(project_id))
 
 
-@project.route('/info/', methods=['GET'])
+@bf_project.route('/info/', methods=['GET'])
 @jwt_required()
 def get_projects_by_user() -> Response:
     from service.ProjectService import ProjectService
-    user_id = get_user_indentity().user_id
+    user_id = get_user_id()
     return R.ok(ProjectService.get_project_by_user_id(user_id))
 
 
-@project.route('/user/case/all', methods=['GET'])
+@bf_project.route('/user/case/all', methods=['GET'])
 @jwt_required()
 def get_project_case_state() -> Response:
-    user_id = get_user_indentity().user_id
+    user_id = get_user_id()
     print("aa")
     from service.ProjectService import ProjectService
     return R.ok(ProjectService.get_project_info_by_user_id(user_id))
