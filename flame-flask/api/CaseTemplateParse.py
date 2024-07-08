@@ -3,7 +3,7 @@ import json
 import os
 from service.CaseTemplate import CaseTemplate
 from service.CaseService import CaseService
-from service.UserService import get_user_indentity
+from service.UserService import get_user_id
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from werkzeug.utils import secure_filename
@@ -54,7 +54,7 @@ def upload_file():
 
     case_type = request.args['type']
     project_id = request.args['project_id']
-    user_id = get_user_indentity().user_id
+    user_id = get_user_id()
     only_return_err = True if request.args['only_return_err'] == '1' else False
     file: FileStorage = request.files['file']
     if file.filename == '' or file.filename is None:
@@ -65,7 +65,7 @@ def upload_file():
     case_template = CaseTemplate(file,
                                  user_id=user_id,
                                  case_type=case_type,
-                                 project_id=int(project_id))
+                                 project_id=project_id)
     # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
     print(f'case_template.get_data(): {case_template.get_data()}')
     CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
