@@ -56,7 +56,7 @@ def upload_file():
 
     case_type: str = request.args['type'] # 现阶段case_type字段对于插库而言无用
     project_id: str = request.args['project_id']
-    user_id: int = get_user_indentity().user_id
+    user_id: str = get_user_id()
     only_return_err = True if request.args['only_return_err'] == '1' else False
     file: FileStorage = request.files['file']
     if file.filename == '' or file.filename is None:
