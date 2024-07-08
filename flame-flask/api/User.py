@@ -1,4 +1,4 @@
-from flask import Blueprint, Response
+from flask import Blueprint, Response, redirect, session, url_for
 from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from utils.CommonResponse import R
@@ -45,3 +45,13 @@ def user_login() -> Response:
 @jwt_required()
 def user_info():
     return R.ok(get_user_id())
+
+@bp.route('/logout', methods=['GET'])
+@jwt_required()
+def logout():
+    session.clear()
+    return redirect(url_for('user.hello'))
+
+@bp.route('/home', methods=['GET'])
+def hello():
+    return 'Hello'

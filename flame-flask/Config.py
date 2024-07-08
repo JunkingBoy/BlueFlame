@@ -15,7 +15,7 @@ def create_app() -> Flask:
     app: Flask = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = StringUtil.generate_string(32)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    
+    app.secret_key = StringUtil.generate_string(32)
     # 根据Docker环境变量设置数据库URI
     if os.getenv('DOCKER_ENV') == 'true':
         app.config['SQLALCHEMY_DATABASE_URI'] = URL(
