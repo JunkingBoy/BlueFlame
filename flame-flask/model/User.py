@@ -11,8 +11,8 @@ class User(db.Model):
     password = db.Column(db.String(120), unique=False, nullable=False)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=func.now(),
-                            onupdate=func.now())
+                            default=datetime.now(),
+                            onupdate=datetime.now())
 
     def __init__(self, user_id, phone, password):
         self.user_id = user_id 

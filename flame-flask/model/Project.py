@@ -50,17 +50,3 @@ class ProjectUser(db.Model):
 
     def to_dict(self) -> dict:
         return {"project_id": self.project_id, "user_id": self.user_id}
-
-
-@dataclass
-class ProjectInfo:
-    project_id: int
-    project_name: str
-    project_desc: str
-    users: list[str]
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-    def __repr__(self):
-        return f"project_id: {self.project_id}\n, project_name: {self.project_name}\n, project_desc: {self.project_desc}, users: {self.users}\n"
