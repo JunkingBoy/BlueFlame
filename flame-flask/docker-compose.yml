@@ -19,6 +19,7 @@ services:
       - mynetwork
 
   postgres:
+    container_name: my_postgres_docker
     image: postgres:13
     environment:
       POSTGRES_USER: postgres
@@ -26,9 +27,15 @@ services:
       POSTGRES_DB: bf
     ports:
       - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - mynetwork
 
 networks:
   mynetwork:
     driver: bridge
+
+
+volumes:
+  postgres_data:

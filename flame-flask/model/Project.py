@@ -1,13 +1,12 @@
 from . import db
 from datetime import datetime
 from dataclasses import dataclass, asdict
-from api.User import UserIdentity
 
 
 class Project(db.Model):
-    __tablename__ = 'projects'
+    __tablename__ = 'project'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    project_id = db.Column(db.Integer, unique=True, nullable=False)
+    project_id = db.Column(db.String(16), unique=True, nullable=False)
     project_name = db.Column(db.String(200), unique=True, nullable=False)
     project_desc = db.Column(db.Text, unique=False, nullable=True)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now())
@@ -34,10 +33,10 @@ class Project(db.Model):
 
 
 class ProjectUser(db.Model):
-    __tablename__ = 'projects_user'
+    __tablename__ = 'project_user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    project_id = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.String(11), unique=False, nullable=False)
+    project_id = db.Column(db.String(16), nullable=False)
+    user_id = db.Column(db.String(16), unique=False, nullable=False)
     update_time = db.Column(db.DateTime,
                             default=lambda: datetime.now(),
                             onupdate=lambda: datetime.now())
@@ -58,7 +57,7 @@ class ProjectInfo:
     project_id: int
     project_name: str
     project_desc: str
-    users: list[UserIdentity]
+    users: list[str]
 
     def to_dict(self) -> dict:
         return asdict(self)

@@ -66,7 +66,7 @@ class CaseService:
     
     # 将解析出的 case_list 插入数据库
     @staticmethod
-    def insert_data_to_db(data: List[Dict[str, Any]], user_id: str, project_id: int) -> List[Dict[str, Any]] | None:
+    def insert_data_to_db(data: List[Dict[str, Any]], user_id: str, project_id: str) -> List[Dict[str, Any]] | None:
         try:
             print("In insert_data_to_db")
             if not data:

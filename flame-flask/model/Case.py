@@ -22,13 +22,13 @@ class Case(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     case_id_by_user = db.Column(db.String(200), nullable=False)
     user_id = db.Column(db.String(80), nullable=False)
-    project_id = db.Column(db.Integer, nullable=False)
+    project_id = db.Column(db.String(16), nullable=False)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
                             default=lambda: datetime.now(),
                             onupdate=lambda: datetime.now())
 
-    def __init__(self, project_id: int, user_id: str, case_id_by_user: str):
+    def __init__(self, project_id: str, user_id: str, case_id_by_user: str):
         self.project_id = project_id
         self.user_id = user_id
         self.case_id_by_user = case_id_by_user 

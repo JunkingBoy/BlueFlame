@@ -11,7 +11,7 @@ class CaseTemplate:
     def __init__(self,
                  file: FileStorage,
                  user_id: str,
-                 project_id: int,
+                 project_id: str,
                  case_type: str = ""):
         self.file = file
         self.user_id = user_id

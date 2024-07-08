@@ -1,15 +1,7 @@
 from . import db
 from datetime import datetime
 from dataclasses import dataclass, asdict
-
-
-@dataclass
-class UserIdentity:
-    phone: str
-    user_id: str
-
-    def to_dict(self):
-        return asdict(self)
+from sqlalchemy import func
 
 
 class User(db.Model):
@@ -20,13 +12,13 @@ class User(db.Model):
     password = db.Column(db.String(120), unique=False, nullable=False)
     create_time = db.Column(db.DateTime, default=lambda: datetime.now())
     update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(),
-                            onupdate=lambda: datetime.now())
+                            default=func.now(),
+                            onupdate=func.now())
 
-    def __init__(self, phone, password):
+    def __init__(self, user_id, phone, password):
+        self.user_id = user_id 
         self.phone = phone
         self.password = password
-        self.user_id = phone
 
     def __repr__(self):
         return f"id: {self.id}, user_id: {self.user_id}, phone: {self.phone}, password: {self.password}, create_time: {self.create_time}, update_time: {self.update_time}"
@@ -40,7 +32,3 @@ class User(db.Model):
             "create_time": self.create_time.isoformat(),
             "update_time": self.update_time.isoformat()
         }
-
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
