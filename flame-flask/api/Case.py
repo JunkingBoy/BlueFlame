@@ -1,8 +1,6 @@
-from flask import Blueprint, Flask, request, jsonify
+from flask import Blueprint, request
 from flask_jwt_extended import jwt_required
-from sqlalchemy import or_
 from datetime import datetime
-from typing import Any, Dict, List
 from model import db
 from model.Case import Case, CaseState, FuncCase
 from utils.CommonResponse import R
