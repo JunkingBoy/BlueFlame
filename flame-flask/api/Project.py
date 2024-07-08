@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
 from service.UserService import get_user_id 
+from model import Project
 
 bf_project = Blueprint("project", __name__)
 
