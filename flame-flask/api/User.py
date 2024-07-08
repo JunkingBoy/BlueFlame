@@ -50,8 +50,4 @@ def user_info():
 @jwt_required()
 def logout():
     session.clear()
-    return redirect(url_for('user.hello'))
-
-@bp.route('/home', methods=['GET'])
-def hello():
-    return 'Hello'
+    return R.ok("Logout success")
