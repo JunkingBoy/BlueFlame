@@ -10,11 +10,11 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, Response, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
 
-case_parse = Blueprint('case_parse', __name__)
+bf_case_parse = Blueprint('case_parse', __name__)
 
 
-@case_parse.route('/download/case_template', methods=["GET"])
-# @jwt_required()
+@bf_case_parse.route('/download/case_template', methods=["GET"])
+@jwt_required()
 def download_case_template_file():
     '''
     # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
@@ -38,7 +38,7 @@ def is_valid_file(file):
     return '.' in file and file.rsplit('.', 1)[1].lower() in ['xlsx', 'xls']
 
 
-@case_parse.route('/upload', methods=['POST'])
+@bf_case_parse.route('/upload', methods=['POST'])
 @jwt_required()
 def upload_file():
     # 检查是否提供了`type`和`project_id`和`file`必要的参数

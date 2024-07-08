@@ -1,6 +1,5 @@
 from . import db
 from datetime import datetime
-from dataclasses import dataclass, asdict
 from sqlalchemy import func
 
 

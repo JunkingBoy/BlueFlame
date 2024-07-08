@@ -22,26 +22,6 @@ class CaseTemplate:
     def __repr__(self) -> str:
         return f"user_id: {self.user_id}, project_id: {self.project_id}, case_type: {self.case_type}, data: {self.data}"
 
-    # def save_case_template(self):
-    #     # 保存用例模板到数据库
-    #     # ...
-    #     current_app.logger.info(f"保存用例模板成功")
-
-    # def update_case_template(self):
-    #     # 更新用例模板到数据库
-    #     # ...
-    #     current_app.logger.info(f"更新用例模板成功")
-
-    # def delete_case_template(self):
-    #     # 删除用例模板
-    #     # ...
-    #     current_app.logger.info(f"删除用例模板成功")
-
-    # def get_case_template(self):
-    #     # 获取用例模板
-    #     # ...
-    #     current_app.logger.info(f"获取用例模板成功")
-
     def to_dict(self):
         return {
             "file": self.file,
