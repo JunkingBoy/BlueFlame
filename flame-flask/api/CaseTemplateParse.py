@@ -13,26 +13,30 @@ from werkzeug.datastructures import FileStorage
 bp = Blueprint('case_parse', __name__)
 
 
-@bp.route('/download/case_template', methods=["GET"])
+@bp.route('/download/case_template/<string:temp_type>', methods=["GET"])
 @jwt_required()
-def download_case_template_file():
-    '''
-    # TODO<2024-06-26, @xcx> 接收前端传过来的一个type字段, 选择下载的excel类型
-    '''
-    template_filepath = './static/func_case_template.xlsx'
-
-    if template_filepath != '':
-        try:
-            file_name: str = secure_filename(template_filepath)
-            return send_file(template_filepath,
-                             as_attachment=True,
-                             download_name=f"{file_name}")
-        except FileNotFoundError as err:
-            current_app.logger.error(f"Can not found file: {err}")
-            return R.create(404, "File not found")
+def download_case_template_file(temp_type: str):
+    if temp_type == 'func':
+        file = './static/func_case_template.xlsx'
+    elif temp_type == 'api':
+        file = './static/api_case_template.xlsx'
     else:
-        return R.create(code=404, msg='typeError', data={})
-
+        return R.err('Invalid template type')
+    
+    try:
+        file_name: str = secure_filename(file)
+        return send_file(
+            file,
+            as_attachment=True,
+            mimetype=
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            download_name=f"{file_name}")
+    except FileNotFoundError as err:
+        current_app.logger.error(f"Can not found file: {err}")
+        return R.create(404, "File not found")
+    except Exception as err:
+        current_app.logger.error(f"Error occurred: {err}")
+        return R.create(500, "Internal server error")
 
 def is_valid_file(file):
     return '.' in file and file.rsplit('.', 1)[1].lower() in ['xlsx', 'xls']
