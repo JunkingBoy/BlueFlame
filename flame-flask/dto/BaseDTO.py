@@ -3,6 +3,8 @@ from typing import Any, Dict, List
 
 
 class BaseDTO(BaseModel):
+    def __init__(self, **data):
+        super().__init__(**data)
 
     @staticmethod
     def custom_errors(e: ValidationError) -> List[Dict[str, Any]] | Dict[str, Any]:

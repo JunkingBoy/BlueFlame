@@ -1,7 +1,5 @@
 from enum import Enum, unique
 from . import db
-from flask_sqlalchemy import SQLAlchemy
-from . import db
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from sqlalchemy import Enum as SQLEnum
