@@ -2,7 +2,8 @@ from enum import Enum, unique
 from . import db
 from datetime import datetime
 from dataclasses import dataclass, asdict
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import TIMESTAMP, Column, Enum as SQLEnum, Integer, String, Text
+from utils import DateUtil
 
 
 @unique
@@ -17,19 +18,22 @@ class CaseState(Enum):
 
 class Case(db.Model):
     __tablename__ = 'case'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    case_id_by_user = db.Column(db.String(200), nullable=False)
-    user_id = db.Column(db.String(80), nullable=False)
-    project_id = db.Column(db.String(16), nullable=False)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
-    update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(),
-                            onupdate=lambda: datetime.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    case_id_by_user = Column(String(200), nullable=False)
+    user_id = Column(String(80), nullable=False)
+    project_id = Column(String(16), nullable=False)
+    create_time = Column(TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now)
+    update_time = Column(TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now,
+                         onupdate=DateUtil.now)
 
     def __init__(self, project_id: str, user_id: str, case_id_by_user: str):
         self.project_id = project_id
         self.user_id = user_id
-        self.case_id_by_user = case_id_by_user 
+        self.case_id_by_user = case_id_by_user
 
     def __repr__(self):
         return f"id: {self.id}, user_id: {self.user_id}, project_id: {self.project_id}, create_time: {self.create_time}, update_time: {self.update_time}"
@@ -39,27 +43,30 @@ class Case(db.Model):
             "id": self.id,
             "user_id": self.user_id,
             "project_id": self.project_id,
-            "create_time": self.create_time.isoformat(),
-            "update_time": self.update_time.isoformat()
+            "create_time": self.create_time, 
+            "update_time": self.update_time, 
         }
 
 
 class FuncCase(db.Model):
     __tablename__ = 'func_case'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    case_id = db.Column(db.Integer, nullable=False)
-    case_name = db.Column(db.String(2048), nullable=False)
-    case_belong_module = db.Column(db.String(2048), nullable=True)
-    case_step = db.Column(db.Text, nullable=True)
-    case_except_result = db.Column(db.String(2048), nullable=True)
-    case_state = db.Column(SQLEnum(CaseState),
-                           default=CaseState.WAITING,
-                           nullable=False)
-    case_comment = db.Column(db.Text, nullable=True)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
-    update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(),
-                            onupdate=lambda: datetime.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    case_id = Column(Integer, nullable=False)
+    case_name = Column(String(2048), nullable=False)
+    case_belong_module = Column(String(2048), nullable=True)
+    case_step = Column(Text, nullable=True)
+    case_except_result = Column(String(2048), nullable=True)
+    case_state = Column(SQLEnum(CaseState),
+                        default=CaseState.WAITING,
+                        nullable=False)
+    case_comment = Column(Text, nullable=True)
+    create_time = Column(TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now)
+    update_time = Column(TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now,
+                         onupdate=DateUtil.now)
 
     def __init__(self, case_id, case_name, case_belong_module, case_step,
                  case_except_result, case_state, case_comment):
@@ -84,6 +91,6 @@ class FuncCase(db.Model):
             "case_except_result": self.case_except_result,
             "case_state": self.case_state,
             "case_comment": self.case_comment,
-            "create_time": self.create_time.isoformat(),
-            "update_time": self.update_time.isoformat()
+            "create_time": self.create_time,
+            "update_time": self.update_time,
         }

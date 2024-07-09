@@ -117,9 +117,9 @@ class ProjectService:
 
                 # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id,
-                    project_name=project.project_name,
-                    project_desc=project.project_desc,
+                    project_id=project.project_id, # type: ignore
+                    project_name=project.project_name, # type: ignore
+                    project_desc=project.project_desc, # type: ignore
                     users=user_ids
                 )
 
@@ -193,9 +193,9 @@ class ProjectService:
 
                 # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id,
-                    project_name=project.project_name,
-                    project_desc=project.project_desc,
+                    project_id=project.project_id, # type: ignore
+                    project_name=project.project_name, # type: ignore
+                    project_desc=project.project_desc, # type: ignore
                     users=user_ids
                 )
 
@@ -245,9 +245,9 @@ class ProjectService:
                 )
 
                 project_info = ProjectCaseInfoDTO(
-                    project_id=project.project_id,
-                    project_name=project.project_name,
-                    project_desc=project.project_desc,
+                    project_id=project.project_id, # type: ignore
+                    project_name=project.project_name, # type: ignore
+                    project_desc=project.project_desc, # type: ignore
                     case=case_info
                 )
 
