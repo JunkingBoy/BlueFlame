@@ -4,11 +4,12 @@ from pydantic import ValidationError
 from utils.CommonResponse import R
 from flask import request
 from service.UserService import get_user_id 
+from model import Project
 
-bf_project = Blueprint("project", __name__)
+bp = Blueprint("project", __name__)
 
 
-@bf_project.route("/create", methods=["POST"])
+@bp.route("/create", methods=["POST"])
 @jwt_required()
 def create_project() -> Response:
     from service.ProjectService import ProjectService
@@ -26,7 +27,7 @@ def create_project() -> Response:
         return R.err(result.content)
 
 
-@bf_project.route("/modify", methods=["PUT"])
+@bp.route("/modify", methods=["PUT"])
 @jwt_required()
 def modify_project() -> Response:
     from service.ProjectService import ProjectService
@@ -44,7 +45,7 @@ def modify_project() -> Response:
 
 
 
-@bf_project.route("/delete/<string:project_id>", methods=["DELETE"])
+@bp.route("/delete/<string:project_id>", methods=["DELETE"])
 @jwt_required()
 def delete_project(project_id: str) -> Response:
     from service.ProjectService import ProjectService
@@ -56,7 +57,7 @@ def delete_project(project_id: str) -> Response:
         return R.err(result.content)
 
 
-@bf_project.route("/all/info", methods=["GET"])
+@bp.route("/all/info", methods=["GET"])
 @jwt_required()
 def project_info() -> Response:
     from service.ProjectService import ProjectService
@@ -68,7 +69,7 @@ def project_info() -> Response:
         return R.err(result.content)
 
 
-@bf_project.route('/<string:project_id>', methods=['GET'])
+@bp.route('/<string:project_id>', methods=['GET'])
 @jwt_required()
 def info(project_id: str) -> Response:
     from service.ProjectService import ProjectService
@@ -79,7 +80,7 @@ def info(project_id: str) -> Response:
         return R.err(result.content)
 
 
-@bf_project.route('/info/', methods=['GET'])
+@bp.route('/info/', methods=['GET'])
 @jwt_required()
 def get_projects_by_user() -> Response:
     from service.ProjectService import ProjectService
@@ -91,7 +92,7 @@ def get_projects_by_user() -> Response:
         return R.err(result.content)
 
 
-@bf_project.route('/user/case/all', methods=['GET'])
+@bp.route('/user/case/all', methods=['GET'])
 @jwt_required()
 def get_project_case_state() -> Response:
     user_id = get_user_id()

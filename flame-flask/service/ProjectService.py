@@ -29,7 +29,7 @@ class ProjectService:
             p = Project(**project.model_dump())
             pu = ProjectUser(project_id=project.project_id, user_id=user_id)
 
-            existd = Project.query.filter_by(project_id=p.project_id).first()
+            existd = Project.query.filter_by(project_name=p.project_name).first()
             if existd:
                 return ServiceResult.fail("已经存在同名项目")
 
@@ -55,10 +55,15 @@ class ProjectService:
             if not is_my_project:
                 return ServiceResult.fail("查无此项目或者您不属于这个项目")
 
+            existd = Project.query.filter_by(project_name=p.project_name).first()
+            if existd:
+                return ServiceResult.fail("已经存在同名项目")
+
             # TODO<2024-07-06, @xcx> 这里问题: 有可能一个项目多个 User, 是否有 owner 的权限才可以改?(目前没有 project'owner 的标识)
             # 修改项目信息
             db.session.query(Project).filter_by(
                 project_id=p.project_id).update({
+                    'project_id': p.new_project_id,
                     'project_name': p.project_name,
                     'project_desc': p.project_desc
                 })
@@ -112,9 +117,9 @@ class ProjectService:
 
                 # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id,
-                    project_name=project.project_name,
-                    project_desc=project.project_desc,
+                    project_id=project.project_id, # type: ignore
+                    project_name=project.project_name, # type: ignore
+                    project_desc=project.project_desc, # type: ignore
                     users=user_ids
                 )
 
@@ -188,9 +193,9 @@ class ProjectService:
 
                 # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id,
-                    project_name=project.project_name,
-                    project_desc=project.project_desc,
+                    project_id=project.project_id, # type: ignore
+                    project_name=project.project_name, # type: ignore
+                    project_desc=project.project_desc, # type: ignore
                     users=user_ids
                 )
 
@@ -240,9 +245,9 @@ class ProjectService:
                 )
 
                 project_info = ProjectCaseInfoDTO(
-                    project_id=project.project_id,
-                    project_name=project.project_name,
-                    project_desc=project.project_desc,
+                    project_id=project.project_id, # type: ignore
+                    project_name=project.project_name, # type: ignore
+                    project_desc=project.project_desc, # type: ignore
                     case=case_info
                 )
 

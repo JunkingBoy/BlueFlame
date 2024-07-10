@@ -12,7 +12,6 @@ if __name__ == "__main__":
     JWTManager(app)
     db.init_app(app)
     register_routes(app)
-
     with app.app_context():
         db.create_all()
 

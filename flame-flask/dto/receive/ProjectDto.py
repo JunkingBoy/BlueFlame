@@ -1,37 +1,84 @@
+from datetime import datetime
 from pydantic import Field, field_validator
 from typing import Optional
 from dto.BaseDTO import BaseDTO
 from utils.StringUtil import sha256_str
+from utils import DateUtil
 
 
 class ProjectCreateDTO(BaseDTO):
 
-    project_id: Optional[str] = Field(None, description="project id")
+    project_id: Optional[str] = Field(description="project id")
     project_name: str = Field(min_length=1,
                               max_length=128,
                               description="project name")
-
     project_desc: Optional[str] = Field(None,
                                         description="project description")
+    start_time: datetime = Field(
+        None, description="project start time(ISO 8601 format)")
+    end_time: datetime = Field(
+        None, description="project start time(ISO 8601 format)")
 
     def __init__(self, **data):
-        # Calculate project_id based on project_name hashcode
-        if 'project_name' in data:
-            data['project_id'] = sha256_str(data['project_name'], length=16)
+        # 使用 sha256 基于project_name 计算 Project_ID
+        data['project_id'] = sha256_str(data['project_name'], length=16)
         super().__init__(**data)
 
-    @field_validator('project_name')
-    def validate_project_name(cls, v):
-        if not v or v == '':
-            raise ValueError('`project_name` are required')
-        return v
+    @field_validator('start_time', 'end_time')
+    def parse_iso8601(cls, v):
+        try:
+            # 尝试解析输入的字符串为 ISO 8601 格式的 datetime 对象
+            # 如果是缺少时间和时区, 默认是 时区+0 时间00:00:00
+            return datetime.fromisoformat(str(v))
+        except ValueError:
+            raise ValueError(
+                'Invalid ISO 8601 datetime format, YYYY-MM-DDTHH:MM:SS[.mmm][+HH:MM]'
+            )
+
+    @field_validator('end_time')
+    def validate_start_end_time(cls, end_time, values):
+        start_time = values.data['start_time']
+        if start_time and end_time <= start_time:
+            raise ValueError('end_time must be greater than start_time')
+        return end_time
 
 
 class ProjectModifyDTO(BaseDTO):
-    project_id: str = Field(description="project id")
+    project_id: str = Field(description="old project id")
+    new_project_id: Optional[str] = Field(description="new project id")
+    
     project_name: Optional[str] = Field(None, description="project name")
+    project_desc: Optional[str] = Field(None,
+                                        description="project description")
+    start_time: datetime = Field(
+        None, description="project start time(ISO 8601 format)")
+    end_time: datetime = Field(
+        None, description="project start time(ISO 8601 format)")
 
-    project_desc: Optional[str] = Field(None, description="project description")
+    def __init__(self, **data):
+        # 修改项目的时候, 需要生成新的 project_id
+        if 'project_name' in data:
+            data['new_project_id'] = sha256_str(data['project_name'], length=16)
+        super().__init__(**data)
+
+    @field_validator('start_time', 'end_time')
+    def parse_iso8601(cls, v):
+        try:
+            # 尝试解析输入的字符串为 ISO 8601 格式的 datetime 对象
+            # 如果是缺少时间和时区, 默认是 时区+0 时间00:00:00
+            return datetime.fromisoformat(str(v))
+        except ValueError:
+            raise ValueError(
+                'Invalid ISO 8601 datetime format, YYYY-MM-DDTHH:MM:SS[.mmm][+HH:MM]'
+            )
+
+    @field_validator('end_time')
+    def validate_start_end_time(cls, end_time, values):
+        start_time = values.data['start_time']
+        if start_time and end_time <= start_time:
+            raise ValueError('end_time must be greater than start_time')
+        return end_time
+
 
     @field_validator("project_id")
     def validate_project_id(cls, v):

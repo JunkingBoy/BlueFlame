@@ -6,10 +6,10 @@ from model.Case import Case, CaseState, FuncCase
 from utils.CommonResponse import R
 
 # TODO<2024-06-29, @xcx> 暂时不注册这个 api 组, 未确定怎么搜索
-case = Blueprint('case', __name__)
+bp = Blueprint('case', __name__)
 
 
-@case.route('/search_cases', methods=['GET'])
+@bp.route('/search_cases', methods=['GET'])
 @jwt_required()
 def search_cases():
     try:
