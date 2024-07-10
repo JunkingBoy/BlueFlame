@@ -1,4 +1,4 @@
-from flask import Blueprint, Response
+from flask import Blueprint, Response, redirect, session, url_for
 from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
 from utils.CommonResponse import R
@@ -6,10 +6,10 @@ from flask import request
 from service.UserService import get_user_id
 from dto.receive.UserDto import UserRegisterDTO
 
-bf_user = Blueprint("user", __name__)
+bp = Blueprint("user", __name__)
 
 
-@bf_user.route("/register", methods=["POST"])
+@bp.route("/register", methods=["POST"])
 def user_register() -> Response:
     from service.UserService import UserService
     try:
@@ -25,7 +25,7 @@ def user_register() -> Response:
         return R.err(result.content)
 
 
-@bf_user.route("/login", methods=["POST"])
+@bp.route("/login", methods=["POST"])
 def user_login() -> Response:
     from dto.receive.UserDto import UserLoginDTO
     from service.UserService import UserService
@@ -41,7 +41,13 @@ def user_login() -> Response:
         return R.err(result.content)
 
 
-@bf_user.route("/info", methods=["GET"])
+@bp.route("/info", methods=["GET"])
 @jwt_required()
 def user_info():
     return R.ok(get_user_id())
+
+@bp.route('/logout', methods=['GET'])
+@jwt_required()
+def logout():
+    session.clear()
+    return R.ok("Logout success")

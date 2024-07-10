@@ -1,34 +1,49 @@
 from . import db
+from sqlalchemy import Column, Integer, String, Text, TIMESTAMP
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from utils import DateUtil
 
 
 class Project(db.Model):
     __tablename__ = 'project'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    project_id = db.Column(db.String(16), unique=True, nullable=False)
-    project_name = db.Column(db.String(200), unique=True, nullable=False)
-    project_desc = db.Column(db.Text, unique=False, nullable=True)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
-    update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(),
-                            onupdate=lambda: datetime.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(String(16), unique=True, nullable=False)
+    project_name = Column(String(200), unique=True, nullable=False)
+    project_desc = Column(Text, unique=False, nullable=True)
+    start_time = Column(TIMESTAMP(timezone=True), nullable=False)
+    end_time = Column(TIMESTAMP(timezone=True), nullable=False)
+    create_time = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now)
+    update_time = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now, onupdate=DateUtil.now)
 
-    def __init__(self, project_id, project_name, project_desc):
+    def __init__(self, project_id, project_name, project_desc, start_time,
+                 end_time):
         self.project_id = project_id
         self.project_name = project_name
         self.project_desc = project_desc
+        self.start_time = start_time
+        self.end_time = end_time
 
     def __repr__(self):
         return f"project_id: {self.project_id}\n, project_desc: {self.project_desc}\n"
 
     def to_dict(self) -> dict:
         return {
-            "project_id": self.project_id,
-            "project_name": self.project_name,
-            "project_desc": self.project_desc,
-            "create_time": self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "update_time": self.update_time.strftime("%Y-%m-%d %H:%M:%S")
+            "project_id":
+            self.project_id,
+            "project_name":
+            self.project_name,
+            "project_desc":
+            self.project_desc,
+            "start_time":
+            self.start_time.strftime("%Y-%m-%d %H:%M:%S")
+            if self.start_time else None,
+            "end_time":
+            self.end_time.strftime("%Y-%m-%d %H:%M:%S")
+            if self.end_time else None,
+            "create_time":
+            self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "update_time":
+            self.update_time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
 
@@ -50,17 +65,3 @@ class ProjectUser(db.Model):
 
     def to_dict(self) -> dict:
         return {"project_id": self.project_id, "user_id": self.user_id}
-
-
-@dataclass
-class ProjectInfo:
-    project_id: int
-    project_name: str
-    project_desc: str
-    users: list[str]
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-    def __repr__(self):
-        return f"project_id: {self.project_id}\n, project_name: {self.project_name}\n, project_desc: {self.project_desc}, users: {self.users}\n"
