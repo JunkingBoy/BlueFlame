@@ -57,16 +57,17 @@ class ProjectService:
                 if existd:
                     return ServiceResult.fail("已经存在同名项目")
 
-                # TODO<2024-07-06, @xcx> 这里问题: 有可能一个项目多个 User, 是否有 owner 的权限才可以改?(目前没有 project'owner 的标识)
-                # 修改项目信息
-                db.session.query(Project).filter_by(
-                    project_id=p.project_id).update({
-                        'project_id': p.new_project_id,
-                        'project_name': p.project_name,
-                        'project_desc': p.project_desc
-                    })
-                db.session.commit()
-                return ServiceResult.success("修改项目信息成功")
+            # TODO<2024-07-06, @xcx> 这里问题: 有可能一个项目多个 User, 是否有 owner 的权限才可以改?(目前没有 project'owner 的标识)
+            # 修改项目信息
+            db.session.query(Project).filter_by(
+                project_id=p.project_id).update({
+                    'project_id': p.new_project_id,
+                    'project_name': p.project_name,
+                    'project_desc': p.project_desc
+                })
+            db.session.query(ProjectUser).filter_by(project_id=p.project_id).update({'project_id': p.new_project_id})
+            db.session.commit()
+            return ServiceResult.success("修改项目信息成功")
         except Exception as e:
             db.session.rollback()
             # current_app.logger.info(f"更改项目失败: {str(e)}")
