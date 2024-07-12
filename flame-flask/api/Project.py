@@ -37,7 +37,7 @@ def modify_project() -> Response:
     except ValidationError as e:
         return R.err(ProjectModifyDTO.custom_errors(e))
 
-    result = ProjectService.modify(project)
+    result = ProjectService.modify(project, get_user_id())
     if result.ok:
         return R.ok(result.content)
     else:

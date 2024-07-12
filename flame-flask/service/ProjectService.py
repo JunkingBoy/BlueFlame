@@ -32,21 +32,19 @@ class ProjectService:
             existd = Project.query.filter_by(project_name=p.project_name).first()
             if existd:
                 return ServiceResult.fail("已经存在同名项目")
-
-            db.session.add(p)
-            db.session.add(pu)
-            db.session.commit()
-            return ServiceResult.success("创建项目成功")
+            else:
+                db.session.add(p)
+                db.session.add(pu)
+                db.session.commit()
+                return ServiceResult.success("创建项目成功")
         except Exception as e:
             db.session.rollback()
             # TODO<2024-07-06, @xcx> 最好有一个错误的表, 可以查询错误类型和对应的报错信息, 不要把程序的错误报出去给用户
             return ServiceResult.fail(f"创建项目失败: {str(e)}")
 
     @staticmethod
-    @jwt_required()
-    def modify(p: ProjectModifyDTO) -> ServiceResult:
+    def modify(p: ProjectModifyDTO, user_id: str) -> ServiceResult:
         try:
-            user_id = get_user_id()
             # 查询项目用户关系，判断当前用户是否属于项目成员
             project_users = db.session.query(ProjectUser).filter_by(
                 project_id=p.project_id).all()
@@ -54,21 +52,21 @@ class ProjectService:
 
             if not is_my_project:
                 return ServiceResult.fail("查无此项目或者您不属于这个项目")
+            else:
+                existd = Project.query.filter_by(project_name=p.project_name).first()
+                if existd:
+                    return ServiceResult.fail("已经存在同名项目")
 
-            existd = Project.query.filter_by(project_name=p.project_name).first()
-            if existd:
-                return ServiceResult.fail("已经存在同名项目")
-
-            # TODO<2024-07-06, @xcx> 这里问题: 有可能一个项目多个 User, 是否有 owner 的权限才可以改?(目前没有 project'owner 的标识)
-            # 修改项目信息
-            db.session.query(Project).filter_by(
-                project_id=p.project_id).update({
-                    'project_id': p.new_project_id,
-                    'project_name': p.project_name,
-                    'project_desc': p.project_desc
-                })
-            db.session.commit()
-            return ServiceResult.success("修改项目信息成功")
+                # TODO<2024-07-06, @xcx> 这里问题: 有可能一个项目多个 User, 是否有 owner 的权限才可以改?(目前没有 project'owner 的标识)
+                # 修改项目信息
+                db.session.query(Project).filter_by(
+                    project_id=p.project_id).update({
+                        'project_id': p.new_project_id,
+                        'project_name': p.project_name,
+                        'project_desc': p.project_desc
+                    })
+                db.session.commit()
+                return ServiceResult.success("修改项目信息成功")
         except Exception as e:
             db.session.rollback()
             # current_app.logger.info(f"更改项目失败: {str(e)}")

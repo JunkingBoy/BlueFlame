@@ -10,18 +10,13 @@ class Project(db.Model):
     project_id = Column(String(16), unique=True, nullable=False)
     project_name = Column(String(200), unique=True, nullable=False)
     project_desc = Column(Text, unique=False, nullable=True)
-    start_time = Column(TIMESTAMP(timezone=True), nullable=False)
-    end_time = Column(TIMESTAMP(timezone=True), nullable=False)
     create_time = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now)
     update_time = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now, onupdate=DateUtil.now)
 
-    def __init__(self, project_id, project_name, project_desc, start_time,
-                 end_time):
+    def __init__(self, project_id, project_name, project_desc):
         self.project_id = project_id
         self.project_name = project_name
         self.project_desc = project_desc
-        self.start_time = start_time
-        self.end_time = end_time
 
     def __repr__(self):
         return f"project_id: {self.project_id}\n, project_desc: {self.project_desc}\n"
@@ -34,12 +29,6 @@ class Project(db.Model):
             self.project_name,
             "project_desc":
             self.project_desc,
-            "start_time":
-            self.start_time.strftime("%Y-%m-%d %H:%M:%S")
-            if self.start_time else None,
-            "end_time":
-            self.end_time.strftime("%Y-%m-%d %H:%M:%S")
-            if self.end_time else None,
             "create_time":
             self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
             "update_time":
