@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-12 13:28:48
+LastEditTime: 2024-07-12 13:36:55
 Description: 
 '''
 from datetime import datetime
@@ -15,6 +15,8 @@ from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
+
+from werkzeug.utils import secure_filename
 
 bp = Blueprint('case_parse', __name__)
 
