@@ -67,6 +67,7 @@ class ProjectService:
                     'project_name': p.project_name,
                     'project_desc': p.project_desc
                 })
+            db.session.query(ProjectUser).filter_by(project_id=p.project_id).update({'project_id': p.new_project_id})
             db.session.commit()
             return ServiceResult.success("修改项目信息成功")
         except Exception as e:
