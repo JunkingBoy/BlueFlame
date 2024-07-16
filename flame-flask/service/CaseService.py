@@ -75,16 +75,16 @@ class CaseService:
                 print("Input data:", data)
                 for item in data:
                     CaseService.validate_input_data(item)
-                    existing_case = CaseService.get_existing_case(item['case_id_by_user'], project_id)
+                    existing_case = CaseService.get_existing_case(item['case_id_by_user'], int(project_id))
                     print('-' * 80)
                     print(f'existing_case: {existing_case}')
                     print('-' * 80)
 
                     if existing_case:
-                        CaseService.update_existing_case(existing_case, user_id, project_id, item)
+                        CaseService.update_existing_case(existing_case, user_id, int(project_id), item)
                         CaseService.update_existing_func_case(existing_case, item)
                     else:
-                        case = CaseService.create_new_case(user_id, project_id, item)
+                        case = CaseService.create_new_case(user_id, int(project_id), item)
                         CaseService.create_new_func_case(case, item)
 
                 current_app.logger.debug("Data inserted/updated successfully", exc_info=True)
@@ -93,6 +93,7 @@ class CaseService:
             db.session.rollback()
             current_app.logger.error(f"Database insert/update failed: {str(e)}", exc_info=True)
         except ValueError as e:
+            db.session.rollback()
             current_app.logger.error(f"Validation error: {str(e)}", exc_info=True)
         except Exception as e:
             db.session.rollback()
