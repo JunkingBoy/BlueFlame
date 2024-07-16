@@ -575,3 +575,48 @@ ISO 8601 格式的示例：
 日期和时间（带时区）：2024-07-01T12:00:00+00:00
 
 ```
+
+
+# 2024-07-16
+
+## 一个项目下的所有的 case 信息
+url: /project/case/info
+i: {
+	"project_id": int
+}
+o: {
+	"data": [
+		{
+			"case_id_by_user": str,
+			"case_name": str,
+			"case_type": str,
+			"case_detail": str,
+			"case_state": str,
+			"create_time": date,
+			"update_time": date,
+		}, 
+		...
+	]
+}
+
+## plan 创建
+url: /project/plan/create
+i: {
+	"project_id": str,
+	"plan_name": str,
+	"start_time": date,
+	"end_time": date,
+	"case_ids": list<case_id: str>
+}
+o: {
+	"msg": str
+}
+logic:  
+	1. 创建 plan_id: str, 根据 user_id + plan_name, sha256
+
+
+## bug
+1. 上传解析 Excel, case_id_by_user: int, 实际需要 str, 出现类型错误
+2. excel 去除update_time
+3. excel create_time 不需要时间, 只需要日期,  datetime   date, 
+
