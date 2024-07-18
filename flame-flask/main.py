@@ -10,8 +10,10 @@ if __name__ == "__main__":
     app: Flask = create_app()
     CORS(app)
     JWTManager(app)
+    # todo需要修改
     db.init_app(app)
     register_routes(app)
+    # SQLAlchemy的配置
     with app.app_context():
         db.create_all()
 

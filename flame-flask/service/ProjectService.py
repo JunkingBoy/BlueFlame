@@ -5,7 +5,7 @@ from service.UserService import get_user_id
 from sqlalchemy import func
 from model.Project import Project, ProjectUser
 from model import db
-from model.Case import Case, FuncCase, CaseState
+from model.Case import Case, CaseState
 from model.User import User
 from flask import current_app
 from service.ServiceResult import ServiceResult
@@ -205,57 +205,57 @@ class ProjectService:
             current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}")
             return ServiceResult.fail(f"Failed to get projects: {str(e)}") 
         
-    @staticmethod
-    def get_project_case_info_by_user_id(user_id: str) -> ServiceResult:
-        try:
-            # 获取用户关联的项目 ID 列表
-            project_ids: List[str] = [
-                pu.project_id
-                for pu in ProjectUser.query.filter_by(user_id=user_id).all()
-            ]
+    # @staticmethod
+    # def get_project_case_info_by_user_id(user_id: str) -> ServiceResult:
+    #     try:
+    #         # 获取用户关联的项目 ID 列表
+    #         project_ids: List[str] = [
+    #             pu.project_id
+    #             for pu in ProjectUser.query.filter_by(user_id=user_id).all()
+    #         ]
 
-            if not project_ids:
-                return ServiceResult.fail("No projects found for this user.")
+    #         if not project_ids:
+    #             return ServiceResult.fail("No projects found for this user.")
 
-            # 获取项目信息
-            projects: List[Project] = Project.query.filter(
-                Project.project_id.in_(project_ids)).all()
+    #         # 获取项目信息
+    #         projects: List[Project] = Project.query.filter(
+    #             Project.project_id.in_(project_ids)).all()
 
-            project_list: List[ProjectCaseInfoDTO] = []
+    #         project_list: List[ProjectCaseInfoDTO] = []
 
-            for project in projects:
-                # 计算项目的所有案例
-                all_case_count = db.session.query(
-                    func.count(Case.id)).filter_by(project_id=project.project_id).scalar()
+    #         for project in projects:
+    #             # 计算项目的所有案例
+    #             all_case_count = db.session.query(
+    #                 func.count(Case.id)).filter_by(project_id=project.project_id).scalar()
 
-                # 数该项目通过状态的案例
-                pass_case_count = db.session.query(func.count(Case.id)).join(
-                    FuncCase, Case.id == FuncCase.case_id
-                ).filter(
-                    cast(Case.project_id, String) == cast(project.project_id, String)
+    #             # 数该项目通过状态的案例
+    #             pass_case_count = db.session.query(func.count(Case.id)).join(
+    #                 FuncCase, Case.id == FuncCase.case_id
+    #             ).filter(
+    #                 cast(Case.project_id, String) == cast(project.project_id, String)
 
-                ).filter(
-                    FuncCase.case_state == CaseState.PASS
-                ).scalar()
+    #             ).filter(
+    #                 FuncCase.case_state == CaseState.PASS
+    #             ).scalar()
 
-                case_info = CaseCountDTO(
-                    all_case=all_case_count,
-                    pass_case=pass_case_count
-                )
+    #             case_info = CaseCountDTO(
+    #                 all_case=all_case_count,
+    #                 pass_case=pass_case_count
+    #             )
 
-                project_info = ProjectCaseInfoDTO(
-                    project_id=project.project_id, # type: ignore
-                    project_name=project.project_name, # type: ignore
-                    project_desc=project.project_desc, # type: ignore
-                    case=case_info
-                )
+    #             project_info = ProjectCaseInfoDTO(
+    #                 project_id=project.project_id, # type: ignore
+    #                 project_name=project.project_name, # type: ignore
+    #                 project_desc=project.project_desc, # type: ignore
+    #                 case=case_info
+    #             )
 
-                project_list.append(project_info)
+    #             project_list.append(project_info)
 
-            return ServiceResult.success([project.model_dump() for project in project_list])
-        except Exception as e:
-            current_app.logger.error(f"Failed to get project case info for user {user_id}: {str(e)}")
-            return ServiceResult.fail(f"Failed to get project case info: {str(e)}")
+    #         return ServiceResult.success([project.model_dump() for project in project_list])
+    #     except Exception as e:
+    #         current_app.logger.error(f"Failed to get project case info for user {user_id}: {str(e)}")
+    #         return ServiceResult.fail(f"Failed to get project case info: {str(e)}")
 
 
 # yapf: enable
