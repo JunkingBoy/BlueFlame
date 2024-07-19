@@ -7,10 +7,10 @@
 db_driver: "postgresql"
 db_user: "postgres"
 db_password: "admin"
+db_password: "admin"
 db_host: "localhost"
 db_port: 5432
-db_name: "Blueflame"
-db_extra_params: "client_encoding=utf8" # 关注是否存在时区问题
+db_name: "BlueFlame"
 
 # # 配置数据库连接池
 # pool_size: 10

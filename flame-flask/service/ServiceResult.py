@@ -1,3 +1,10 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-19 16:40:24
+Description: 
+'''
 from typing import Any, Dict, Optional
 
 class ServiceResult:
@@ -6,7 +13,7 @@ class ServiceResult:
         self.content = data
 
     @staticmethod
-    def success(data: Any = None) -> 'ServiceResult':
+    def success(data: Optional[Dict[str, Any] | str] = None) -> 'ServiceResult':
         return ServiceResult(True, data)
 
     @staticmethod

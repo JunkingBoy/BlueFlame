@@ -2,13 +2,13 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-18 19:33:58
+LastEditTime: 2024-07-19 19:25:02
 Description: 
 '''
 from datetime import timedelta
 import os
-from typing import Dict, Any
-from flask import Flask, current_app
+from typing import Any, Dict
+from flask import Flask
 import yaml
 import utils.StringUtil as StringUtil
 from logging import Handler
@@ -30,7 +30,7 @@ def create_app() -> Flask:
             host=os.getenv("DB_HOST"),
             database=os.getenv("DB_NAME"),
             port=int(os.getenv("DB_PORT")),
-            query={"options": "-c TimeZone=Asia/Shanghai"}
+            query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
     else:
         extra_params: str = get_value_from_yaml('db_extra_params')
@@ -41,11 +41,9 @@ def create_app() -> Flask:
             password=get_value_from_yaml("db_password"),
             host=get_value_from_yaml("db_host"),
             database=get_value_from_yaml("db_name"),
-            port=int(get_value_from_yaml("db_port")),
-            query=db_extra_params
+            port=get_value_from_yaml("db_port"),
+            query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
-
-    print(app.config['SQLALCHEMY_DATABASE_URI'])
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -57,7 +55,7 @@ def create_app() -> Flask:
     return app
 
 
-def get_value_from_yaml(key: str) -> str:
+def get_value_from_yaml(key) -> Any:
     cwd: str = os.getcwd()
     module_cwd: str = os.path.dirname(os.path.realpath(__file__))
     os.chdir(module_cwd)
@@ -67,12 +65,12 @@ def get_value_from_yaml(key: str) -> str:
         with open(conf, 'r', encoding='utf-8') as stream:
             data = yaml.safe_load(stream)
     except yaml.YAMLError as e:
-        current_app.logger.error(f"config.yaml load fail {e}")
+        print(e)
     finally:
         os.chdir(cwd)
 
     if key in data and data[key] is not None:
-        return str(data.get(key))
+        return data[key]
     else:
         return ""
 

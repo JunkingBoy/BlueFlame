@@ -612,7 +612,6 @@ logic:
 2. excel 去除update_time
 3. excel create_time 不需要时间, 只需要日期,  datetime   date, 
 
-
 # 20240718
 
 ## User重构
@@ -623,7 +622,7 @@ user表:
 	id: int
 	user_id: str -> phonehash生成
 	user_name: str -> 用户phone(如:用户18785452131) 
-	phone: str -> 账号
+	phone: str -> 账号,区别不同用户的核心
 	pwd: str
 	create_time: date, 
 	update_time: date
@@ -639,7 +638,7 @@ user表:
 ### 技术选型
 
 - 使用flask创建服务端网络服务
-- 使用flask-WTForms进行表单检验
+- 使用pydantic进行orm检验
 - 数据库控制
 	- 使用postgresql数据库
 	- 使用flask-sqlalchemy的orm模型对数据库表进行创建
