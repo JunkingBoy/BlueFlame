@@ -1,6 +1,6 @@
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask import Flask
+from flask import Flask, current_app
 from Config import create_app
 from model import db
 from api import register_routes
@@ -12,7 +12,10 @@ if __name__ == "__main__":
     JWTManager(app)
     db.init_app(app)
     register_routes(app)
-    with app.app_context():
-        db.create_all()
+    try:
+        with app.app_context():
+            db.create_all()
+    except Exception as e:
+        current_app.logger.error(f"Error creating database tables: {e}")
 
     app.run(host='0.0.0.0', port=8000, debug=True)
