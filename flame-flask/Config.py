@@ -2,19 +2,20 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-19 19:25:02
+LastEditTime: 2024-07-19 19:49:27
 Description: 
 '''
-from datetime import timedelta
 import os
+import yaml
+import logging
+from datetime import timedelta
 from typing import Any, Dict
 from flask import Flask
-import yaml
-import utils.StringUtil as StringUtil
 from logging import Handler
 from sqlalchemy.engine.url import URL
-from urllib.parse import parse_qsl
-import logging
+from sqlalchemy.util import immutabledict
+
+import utils.StringUtil as StringUtil
 
 def create_app() -> Flask:
     app: Flask = Flask(__name__)
@@ -33,8 +34,6 @@ def create_app() -> Flask:
             query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
     else:
-        extra_params: str = get_value_from_yaml('db_extra_params')
-        db_extra_params: Dict[str, Any] = dict(parse_qsl(extra_params))
         app.config['SQLALCHEMY_DATABASE_URI'] = URL(
             drivername=get_value_from_yaml('db_driver'),
             username=get_value_from_yaml("db_user"),
