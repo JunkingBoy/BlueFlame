@@ -620,3 +620,44 @@ logic:
 2. excel 去除update_time
 3. excel create_time 不需要时间, 只需要日期,  datetime   date, 
 
+# 20240718
+
+## User重构
+
+### 表字段重构
+
+user表:
+	id: int
+	user_id: str -> phonehash生成
+	user_name: str -> 用户phone(如:用户18785452131) 
+	phone: str -> 账号,区别不同用户的核心
+	pwd: str
+	create_time: date, 
+	update_time: date
+
+#### 提供api
+
+- 注册api
+- 登录api
+- 修改api
+	- 可修改用户名、密码
+	- 原密码、修改密码、确认密码
+
+### 技术选型
+
+- 使用flask创建服务端网络服务
+- 使用pydantic进行orm检验
+- 数据库控制
+	- 使用postgresql数据库
+	- 使用flask-sqlalchemy的orm模型对数据库表进行创建
+	- 使用sqlalchemy-engine-connection-pooling对数据库进行连接池控制
+
+#### 重构顺序
+
+- 先重构User表.对登录、注册进行重构
+	- 先疏通sqlalchemy这一块逻辑
+		- 先对sqlalchemy进行理论学习
+			- 了解他是如何进行工作的
+			- 了解他有那些部分
+			- 了解他的使用方法
+			- 了解他的示例

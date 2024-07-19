@@ -41,6 +41,22 @@ def user_login() -> Response:
         return R.err(result.content)
 
 
+@bp.route("/modify", methods=["PUT"])
+@jwt_required()
+def user_modify() -> Response:
+    from dto.receive.UserDto import UserModifyDTO
+    from service.UserService import UserService
+    try:
+        user: UserModifyDTO = UserModifyDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(UserModifyDTO.custom_errors(e))
+    
+    result = UserService.modify(user, get_user_id())
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
+
 @bp.route("/info", methods=["GET"])
 @jwt_required()
 def user_info():
