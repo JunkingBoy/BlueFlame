@@ -2,15 +2,13 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-01 19:32:30
+LastEditTime: 2024-07-19 15:43:22
 Description: 
 '''
 from datetime import timedelta
 import os
-from typing import Any
+from typing import Any, Dict
 from flask import Flask
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 import yaml
 import utils.StringUtil as StringUtil
 from logging import Handler
@@ -32,7 +30,7 @@ def create_app() -> Flask:
             host=os.getenv("DB_HOST"),
             database=os.getenv("DB_NAME"),
             port=int(os.getenv("DB_PORT")),
-            query={"options": "-c TimeZone=Asia/Shanghai"}
+            query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = URL(
@@ -42,9 +40,8 @@ def create_app() -> Flask:
             host=get_value_from_yaml("db_host"),
             database=get_value_from_yaml("db_name"),
             port=get_value_from_yaml("db_port"),
-            query={"options": "-c Asia/Shanghai"}
+            query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
-
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -57,18 +54,23 @@ def create_app() -> Flask:
 
 
 def get_value_from_yaml(key) -> Any:
-    cwd = os.getcwd()
-    module_cwd = os.path.dirname(os.path.realpath(__file__))
+    cwd: str = os.getcwd()
+    module_cwd: str = os.path.dirname(os.path.realpath(__file__))
     os.chdir(module_cwd)
     conf = "./config.yaml"
-    with open(conf, 'r', encoding='utf-8') as stream:
-        try:
+    data: Dict[str, Any] = {}
+    try:
+        with open(conf, 'r', encoding='utf-8') as stream:
             data = yaml.safe_load(stream)
-            return data.get(key)
-        except yaml.YAMLError as e:
-            print(e)
-        finally:
-            os.chdir(cwd)
+    except yaml.YAMLError as e:
+        print(e)
+    finally:
+        os.chdir(cwd)
+
+    if key in data and data[key] is not None:
+        return data[key]
+    else:
+        return ""
 
 def log() -> Handler:
     handler: Handler = logging.StreamHandler()
