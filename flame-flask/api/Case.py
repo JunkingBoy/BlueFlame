@@ -1,12 +1,19 @@
-# from flask import Blueprint, request
-# from flask_jwt_extended import jwt_required
-# from datetime import datetime
-# from model import db
-# from model.Case import Case, CaseState, FuncCase
-# from utils.CommonResponse import R
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-22 02:33:07
+Description: 
+'''
+from flask import Blueprint, request
+from flask_jwt_extended import jwt_required
+from datetime import datetime
+from model import db
+from model.Case import Case, CaseState
+from utils.CommonResponse import R
 
-# # TODO<2024-06-29, @xcx> 暂时不注册这个 api 组, 未确定怎么搜索
-# bp = Blueprint('case', __name__)
+# TODO<2024-06-29, @xcx> 暂时不注册这个 api 组, 未确定怎么搜索
+bp = Blueprint('case', __name__)
 
 
 # @bp.route('/search_cases', methods=['GET'])

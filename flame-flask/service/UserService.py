@@ -2,11 +2,10 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-19 19:11:34
+LastEditTime: 2024-07-21 01:01:11
 Description: 
 '''
 import hashlib
-from werkzeug.security import check_password_hash
 from typing import Optional
 from flask import current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -17,7 +16,7 @@ from .ServiceResult import ServiceResult
 
 from model.User import User
 
-from dto.receive.UserDto import UserRegisterDTO, UserLoginDTO, UserModifyDTO
+from dto.receive.UserDto import UserRegisterDTO, UserLoginDTO, UserModifyDTO, UserModifyNameDTO
 
 from utils.StringUtil import sha256_str 
 
@@ -103,6 +102,28 @@ class UserService:
             db.session.rollback()
             current_app.logger.error(f"modify fail {e}")
             return ServiceResult.fail("modify fail")
+
+    @staticmethod
+    def modify_name(user_dto: UserModifyNameDTO, user_id: str) -> ServiceResult:
+        user: Optional[User] = None
+        modify_name: str = ""
+
+        try:
+            user = db.session.query(User).filter_by(user_id=user_id).first()
+            if user is None:
+                return ServiceResult.fail(f"User not found")
+            
+            if user.user_name == user_dto.name: # type: ignore
+                return ServiceResult.fail(f"name not change")
+            
+            modify_name = user_dto.name
+            user.user_name = modify_name # type: ignore
+            db.session.commit()
+            return ServiceResult.success("modify name success")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"modify name fail {e}")
+            return ServiceResult.fail("modify name fail")
 
 @jwt_required()
 def get_user_id() -> str:
