@@ -2,10 +2,12 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-21 01:01:11
+LastEditTime: 2024-07-22 04:12:54
 Description: 
 '''
 import hashlib
+import random
+import string
 from typing import Optional
 from flask import current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -16,9 +18,10 @@ from .ServiceResult import ServiceResult
 
 from model.User import User
 
-from dto.receive.UserDto import UserRegisterDTO, UserLoginDTO, UserModifyDTO, UserModifyNameDTO
+from dto.receive.UserDto import UserRegisterDTO, UserLoginDTO, UserModifyPasswordDTO, UserModifyNameDTO, UserLogoutDTO
 
 from utils.StringUtil import sha256_str 
+from utils.DateUtil import now
 
 
 
@@ -31,77 +34,124 @@ class UserService:
         3. 加密密码, 使用确定性hash, sha256
         4. 把加密密码写进数据库, 然后生成 jwt, 返回json
         """
-        phone: str = user_dto.phone
-        pwd: str = user_dto.password
+        existing_user: Optional[User] = None
+        user: User
 
         # 检查电话号码是否已存在
-        existing_user = User.query.filter_by(phone=phone).first()
+        existing_user = db.session.query(User).filter(
+            User.phone == user_dto.phone,
+            User.is_logout == False
+        ).first()
+
         if existing_user:
-            return ServiceResult.fail("Phone number already registered")
+            return ServiceResult.fail(f"Phone number already registered")
         else:
-            # 生成用户名
-            user_name: str = f"用户{phone}"
+            user_name: str = f"用户{user_dto.phone}"
 
-            # 加密密码
-            hashed_pwd = hashlib.sha256(pwd.encode()).hexdigest()
+            hashed_pwd = hashlib.sha256(user_dto.password.encode()).hexdigest()
 
-            # 创建用户实例
-            user = User(user_id=sha256_str(phone), user_name=user_name, phone=phone, password=hashed_pwd)
+            user = User(user_id=sha256_str(user_dto.phone), user_name=user_name, phone=user_dto.phone, password=hashed_pwd)
             db.session.add(user)
             db.session.commit()
-            return ServiceResult.success("User created successfully")
+            return ServiceResult.success(f"User created successfully")
 
     @staticmethod
     def login(user_dto: UserLoginDTO) -> ServiceResult:
-        # Check if the phone number already exists
-        existing_user: User | None = User.query.filter_by(phone=user_dto.phone).first()
-        if not existing_user:
-            return ServiceResult.fail("Phone number not registered")
-
-        #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
-        user: Optional[User] = User.query.filter_by(phone=user_dto.phone).first()
-        if user is None:
-            return ServiceResult.fail("User not found")
-        
-        if hashlib.sha256(
-                user_dto.password.encode()).hexdigest() != user.password:
-            return ServiceResult.fail("Password not match")
-
-        token = create_access_token(identity=user.user_id)
-
-        # 返回 Bearer token
-        return ServiceResult.success({"token": token, "token_type": "Bearer"})
-
-    @staticmethod
-    def modify(user_dto: UserModifyDTO, user_id: str) -> ServiceResult:
-        '''
-        取出新密码
-        加密
-        更新数据库
-        '''
+        existing_user: Optional[User] = None
         user: Optional[User] = None
-        insert_new_password: str = ""
-        password_temp: str = ""
+        temp_password: str = ""
 
         try:
-            user = db.session.query(User).filter_by(user_id=user_id).first()
+            existing_user = db.session.query(User).filter(
+                User.phone == user_dto.phone,
+                User.is_logout == False
+            ).first()
+
+            if not existing_user:
+                return ServiceResult.fail(f"Phone number not registered")
+
+            #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
+            user = db.session.query(User).filter(
+                User.phone == user_dto.phone,
+                User.is_logout == False
+            ).first()
+
+            if user is None:
+                return ServiceResult.fail(f"User not found")
+        
+            temp_password = hashlib.sha256(user_dto.password.encode()).hexdigest()
+            
+            if temp_password != user.password:
+                return ServiceResult.fail(f"Password not match")
+            else:
+                token = create_access_token(identity=user.user_id)
+                # 返回 Bearer token
+                return ServiceResult.success({"token": token, "token_type": "Bearer"})
+        except Exception as e:
+            current_app.logger.error(f"login fail {e}")
+            return ServiceResult.fail(f"login fail")
+
+    @staticmethod
+    def logout(user_dto: UserLogoutDTO, user_id: str) -> ServiceResult:
+        user: Optional[User] = None
+        temp_password: str = ""
+        new_user_id: str = ""
+        random_phone: str = ""
+
+        try:
+            user = db.session.query(User).filter(
+                User.user_id == user_id,
+                User.is_logout == False
+            ).first()
+
             if user is None:
                 return ServiceResult.fail(f"User not found")
             
-            password_temp = hashlib.sha256(user_dto.password.encode()).hexdigest()
+            temp_password = str(hashlib.sha256(user_dto.password.encode()).hexdigest())
 
-            if str(user.password) != str(password_temp):
-                return ServiceResult.fail("Password not match")
+            if str(user.password) != temp_password:
+                return ServiceResult.fail(f"Password not match")
             else:
-                insert_new_password = hashlib.sha256(user_dto.new_password.encode()).hexdigest()
-                user.user_name = user_dto.name # type: ignore
-                user.password = insert_new_password # type: ignore
+                new_user_id = sha256_str(str(f"{now()}{user_id}"))
+                random_phone = ''.join(random.choices(string.digits, k=12))
+                user.user_id = new_user_id # type: ignore
+                user.phone = random_phone # type: ignore
+                user.is_logout = True # type: ignore
+                user.update_time = now() # type: ignore
                 db.session.commit()
-                return ServiceResult.success("modify success")
+                return ServiceResult.success(f"logout successful")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"modify fail {e}")
-            return ServiceResult.fail("modify fail")
+            current_app.logger.error(f"logout fail {e}")
+            return ServiceResult.fail(f"logout fail")
+
+    @staticmethod
+    def modify_password(user_dto: UserModifyPasswordDTO, user_id: str) -> ServiceResult:
+        user: Optional[User] = None
+        insert_new_password: str = ""
+        temp_password: str = ""
+
+        try:
+            user = db.session.query(User).filter(
+                User.user_id == user_id,
+                User.is_logout == False
+            ).first()
+            if user is None:
+                return ServiceResult.fail(f"User not found")
+            
+            temp_password = str(hashlib.sha256(user_dto.password.encode()).hexdigest())
+
+            if str(user.password) != temp_password:
+                return ServiceResult.fail(f"Password not match")
+            else:
+                insert_new_password = hashlib.sha256(user_dto.new_password.encode()).hexdigest()
+                user.password = insert_new_password # type: ignore
+                db.session.commit()
+                return ServiceResult.success(f"modify password successful")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"modify password fail {e}")
+            return ServiceResult.fail(f"modify password fail")
 
     @staticmethod
     def modify_name(user_dto: UserModifyNameDTO, user_id: str) -> ServiceResult:
@@ -109,7 +159,10 @@ class UserService:
         modify_name: str = ""
 
         try:
-            user = db.session.query(User).filter_by(user_id=user_id).first()
+            user = db.session.query(User).filter(
+                User.user_id == user_id,
+                User.is_logout == False
+            ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
             
