@@ -1,39 +1,57 @@
-# from . import db
-# from sqlalchemy import Column, Integer, String, Text, TIMESTAMP
-# from datetime import datetime
-# from utils import DateUtil
+from . import db
+from typing import Optional
+from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, Boolean
+from sqlalchemy.event import listen
+from datetime import datetime
+from hashlib import sha1
 
+from utils import DateUtil
 
-# class Project(db.Model):
-#     __tablename__ = 'project'
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     project_id = Column(String(16), unique=True, nullable=False)
-#     project_name = Column(String(200), unique=True, nullable=False)
-#     project_desc = Column(Text, unique=False, nullable=True)
-#     create_time = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now)
-#     update_time = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now, onupdate=DateUtil.now)
+class Project(db.Model):
+    __tablename__ = 'project'
+    id: Column[int] = Column(Integer, primary_key=True, autoincrement=True)
+    project_id: Column[str] = Column(String(16), unique=True, nullable=True)
+    project_name: Column[str] = Column(String(200), unique=True, nullable=False)
+    project_desc: Column[str] = Column(Text, unique=False, nullable=True)
+    is_init: Column[bool] = Column(Boolean, unique=False, nullable=False, default=False)
+    create_time: Column[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now)
+    update_time: Column[datetime] = Column(TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now, onupdate=DateUtil.now)
 
-#     def __init__(self, project_id, project_name, project_desc):
-#         self.project_id = project_id
-#         self.project_name = project_name
-#         self.project_desc = project_desc
+    def __init__(self, project_name: str, project_desc: str):
+        self.project_name = project_name # type: ignore
+        self.project_desc = project_desc # type: ignore
 
-#     def __repr__(self):
-#         return f"project_id: {self.project_id}\n, project_desc: {self.project_desc}\n"
+    def __repr__(self):
+        return f"id: {self.id}, project_id: {self.project_id}\n, project_desc: {self.project_desc}\n"
 
-#     def to_dict(self) -> dict:
-#         return {
-#             "project_id":
-#             self.project_id,
-#             "project_name":
-#             self.project_name,
-#             "project_desc":
-#             self.project_desc,
-#             "create_time":
-#             self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
-#             "update_time":
-#             self.update_time.strftime("%Y-%m-%d %H:%M:%S")
-#         }
+    def to_dict(self) -> dict:
+        return {
+            "project_id":
+            self.project_id,
+            "project_name":
+            self.project_name,
+            "project_desc":
+            self.project_desc,
+            "create_time":
+            self.create_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "update_time":
+            self.update_time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+    def generate_project_id(self):
+        """Generate a project_id based on the id."""
+        hash_object = sha1(str(self.id).encode())
+        hex_dig = hash_object.hexdigest()
+        return hex_dig[:16]
+
+# 定义事件监听器
+def after_insert(mapper, connection, target):
+    print("监听器")
+    print(target.generate_project_id())
+    target.project_id = target.generate_project_id()
+
+# 注册事件监听器
+listen(Project, 'after_insert', after_insert)
 
 
 # class ProjectUser(db.Model):

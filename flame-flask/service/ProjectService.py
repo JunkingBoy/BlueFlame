@@ -1,46 +1,55 @@
-# from typing import Any, Dict, List, Optional
-# from dto.receive.ProjectDto import ProjectCreateDTO
-# from flask_jwt_extended import jwt_required
-# from service.UserService import get_user_id
-# from sqlalchemy import func
-# from model.Project import Project, ProjectUser
-# from model import db
-# from model.Case import Case, FuncCase, CaseState
-# from model.User import User
-# from flask import current_app
-# from service.ServiceResult import ServiceResult
+import random
+from typing import Any, Dict, List, Optional
+from dto.receive.ProjectDto import ProjectCreateDTO
+from flask_jwt_extended import jwt_required
+from service.UserService import get_user_id
+from sqlalchemy import func
+from model.Project import Project
+from model import db
+from model.Case import Case, CaseState
+from model.User import User
+from flask import current_app
+from service.ServiceResult import ServiceResult
 # from dto.receive.ProjectDto import ProjectModifyDTO
-# from sqlalchemy.orm import aliased
-# from dto.response.UserDto import UserDTO
-# from dto.response.ProjectDto import ProjectDTO, ProjectCaseInfoDTO
-# from dto.response.CaseDto import CaseCountDTO
-# from sqlalchemy import cast, String
+from sqlalchemy.orm import aliased
+from dto.response.UserDto import UserDTO
+from dto.response.ProjectDto import ProjectDTO, ProjectCaseInfoDTO
+from dto.response.CaseDto import CaseCountDTO
+from sqlalchemy import cast, String
 
 
-# # fmt: off
-# # yapf: disable
+class ProjectService:
 
+    @staticmethod
+    def create(project: ProjectCreateDTO, user_id: str) -> ServiceResult:
+        temp_project_id: str = ""
 
-# class ProjectService:
+        try:
+            temp_project_id = user_id + str(random.random())
+            p = Project(**project.model_dump())
+            # pu = ProjectUser(project_id=project.project_id, user_id=user_id)
 
-#     @staticmethod
-#     def create(project: ProjectCreateDTO, user_id: str) -> ServiceResult:
-#         try:
-#             p = Project(**project.model_dump())
-#             pu = ProjectUser(project_id=project.project_id, user_id=user_id)
-
-#             existd = Project.query.filter_by(project_name=p.project_name).first()
-#             if existd:
-#                 return ServiceResult.fail("已经存在同名项目")
-#             else:
-#                 db.session.add(p)
-#                 db.session.add(pu)
-#                 db.session.commit()
-#                 return ServiceResult.success("创建项目成功")
-#         except Exception as e:
-#             db.session.rollback()
-#             # TODO<2024-07-06, @xcx> 最好有一个错误的表, 可以查询错误类型和对应的报错信息, 不要把程序的错误报出去给用户
-#             return ServiceResult.fail(f"创建项目失败: {str(e)}")
+            print(f"---------{p.id}")
+            print(p)
+            # existed = db.session.query(Project).filter_by(
+            #     project_name=p.project_name).first()
+            # # # existd = Project.query.filter_by(project_name=p.project_name).first()
+            # if existed:
+            #     return ServiceResult.fail("已经存在同名项目")
+            # else:
+            db.session.add(p)
+            print(f"---------{p.id}")
+            # db.session.add(pu)
+            p.project_id = p.generate_project_id() # type: ignore
+            print("先执行")
+            print(p.project_id)
+            db.session.commit()
+            return ServiceResult.success("创建项目成功")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"create project fail {e}")
+            # TODO<2024-07-06, @xcx> 最好有一个错误的表, 可以查询错误类型和对应的报错信息, 不要把程序的错误报出去给用户
+            return ServiceResult.fail(f"创建项目失败: {str(e)}")
 
 #     @staticmethod
 #     def modify(p: ProjectModifyDTO, user_id: str) -> ServiceResult:

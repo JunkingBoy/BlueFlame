@@ -1,3 +1,10 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-20 16:35:37
+Description: 
+'''
 from flask import Blueprint, Response, redirect, session, url_for
 from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
@@ -44,14 +51,24 @@ def user_login() -> Response:
 @bp.route("/modify", methods=["PUT"])
 @jwt_required()
 def user_modify() -> Response:
-    from dto.receive.UserDto import UserModifyDTO
+    from dto.receive.UserDto import UserModifyDTO, UserModifyNameDTO
     from service.UserService import UserService
+
+    user: UserModifyDTO | UserModifyNameDTO
+
     try:
-        user: UserModifyDTO = UserModifyDTO(**request.get_json())
+        if 'password' and 'new_password' and 'new_password_confirm' in request.get_json():
+            user = UserModifyDTO(**request.get_json())
+        else:
+            user = UserModifyNameDTO(**request.get_json())
     except ValidationError as e:
         return R.err(UserModifyDTO.custom_errors(e))
     
-    result = UserService.modify(user, get_user_id())
+    if isinstance(user, UserModifyNameDTO):
+        result = UserService.modify_name(user, get_user_id())
+    else:
+        result = UserService.modify(user, get_user_id())
+
     if result.ok:
         return R.ok(result.content)
     else:

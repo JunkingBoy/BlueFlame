@@ -1,5 +1,7 @@
+import re
 from pydantic import Field, field_validator
 from typing import Annotated
+
 from dto.BaseDTO import BaseDTO 
 
 
@@ -116,4 +118,18 @@ class UserModifyDTO(BaseDTO):
     def check_new_password_confirm_match(cls, v: str, values):
         if 'new_password' in values.data and v != values.data['new_password']:
             raise ValueError('Passwords do not match')
+        return v
+    
+class UserModifyNameDTO(BaseDTO):
+    name: Annotated[
+        str,
+        Field(min_length=1, max_length=16, description="User's name string")
+    ]
+
+    @field_validator('name')
+    def check_name_length(cls, v: str):
+        if len(v) < 1 or len(v) > 16:
+            raise ValueError('name must be between1 and 16 characters long')
+        if re.fullmatch(r"[^\w\s]", v):  # \w 匹配任何字母数字字符，\s 匹配空格
+            raise ValueError('name cannot consist solely of special characters')
         return v

@@ -1,9 +1,17 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-21 03:41:25
+Description: 
+'''
 from pydantic import BaseModel, ValidationError
 from typing import Any, Dict, List
 
 
 class BaseDTO(BaseModel):
     def __init__(self, **data):
+        print("32123123123123321")
         super().__init__(**data)
 
     @staticmethod

@@ -2,14 +2,14 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-12 13:36:55
+LastEditTime: 2024-07-20 23:54:30
 Description: 
 '''
 from datetime import datetime
 import json
 import os
 from service.CaseTemplate import CaseTemplate
-from service.CaseService import CaseService
+# from service.CaseService import CaseService
 from service.UserService import get_user_id
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
@@ -80,7 +80,7 @@ def upload_file():
                                  project_id=project_id)
     # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
     print(f'case_template.get_data(): {case_template.get_data()}')
-    CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
+    # CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
 
     folder = f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}'
     if not os.path.exists(folder):

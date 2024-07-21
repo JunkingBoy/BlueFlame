@@ -1,51 +1,63 @@
-# from enum import Enum, unique
-# from . import db
-# from datetime import datetime
-# from dataclasses import dataclass, asdict
-# from sqlalchemy import TIMESTAMP, Column, Enum as SQLEnum, Integer, String, Text
-# from utils import DateUtil
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-21 00:23:34
+Description: 
+'''
+from typing import List, Dict
+from enum import Enum, unique
+from . import db
+from datetime import datetime
+from sqlalchemy import TIMESTAMP, Column, Enum as SQLEnum, Integer, String, Text
+
+from utils import DateUtil
 
 
-# @unique
-# class CaseState(Enum):
-#     WAITING = "待执行"
-#     PASS = "测试通过"
-#     ERROR_BUT_NOT_VERIFY = "测试失败, 待确认"
-#     ERROR_VERIFYED = "测试失败, 已确认"
-#     UNKNOWN = "未知状态"
-#     # 添加其他状态...
+@unique
+class CaseState(Enum):
+    WAITING = "待执行"
+    PASS = "测试通过"
+    ERROR_BUT_NOT_VERIFY = "测试失败, 待确认"
+    ERROR_VERIFYED = "测试失败, 已确认"
+    UNKNOWN = "未知状态"
+    # 添加其他状态...
 
 
-# class Case(db.Model):
-#     __tablename__ = 'case'
-#     id = Column(Integer, primary_key=True, autoincrement=True)
-#     case_id_by_user = Column(String(200), nullable=False)
-#     user_id = Column(String(80), nullable=False)
-#     project_id = Column(String(16), nullable=False)
-#     create_time = Column(TIMESTAMP(timezone=True),
-#                          nullable=False,
-#                          default=DateUtil.now)
-#     update_time = Column(TIMESTAMP(timezone=True),
-#                          nullable=False,
-#                          default=DateUtil.now,
-#                          onupdate=DateUtil.now)
+class Case(db.Model):
+    __tablename__ = 'case'
+    id: Column[int] = Column(Integer, primary_key=True, autoincrement=True)
+    id_by_user: Column[str] = Column(String(200), nullable=False)
+    case_type: Column[str] = Column(String(20), nullable=False)
+    case_detail: Column[str] = Column(Text, nullable=False)
+    case_hash: Column[str] = Column(String(80), nullable=False)
+    user_id: Column[str] = Column(String(80), nullable=False)
+    project_id: Column[str] = Column(String(16), nullable=False)
+    create_time: Column[datetime] = Column(TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now)
+    update_time: Column[datetime] = Column(TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now,
+                         onupdate=DateUtil.now)
 
-#     def __init__(self, project_id: str, user_id: str, case_id_by_user: str):
-#         self.project_id = project_id
-#         self.user_id = user_id
-#         self.case_id_by_user = case_id_by_user
+    def __init__(self, project_id: str, user_id: str, id_by_user: str):
+        self.id_by_user = id_by_user # type: ignore
+        self.project_id = project_id # type: ignore
+        self.user_id = user_id # type: ignore
 
-#     def __repr__(self):
-#         return f"id: {self.id}, user_id: {self.user_id}, project_id: {self.project_id}, create_time: {self.create_time}, update_time: {self.update_time}"
+    def __repr__(self):
+        return f"id: {self.id}, user_id: {self.user_id}, project_id: {self.project_id}, create_time: {self.create_time}, update_time: {self.update_time}"
 
-#     def to_dict(self) -> dict:
-#         return {
-#             "id": self.id,
-#             "user_id": self.user_id,
-#             "project_id": self.project_id,
-#             "create_time": self.create_time, 
-#             "update_time": self.update_time, 
-#         }
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "project_id": self.project_id,
+            "case_detail": self.case_detail,
+            "create_time": self.create_time, 
+            "update_time": self.update_time, 
+        }
 
 
 # class FuncCase(db.Model):

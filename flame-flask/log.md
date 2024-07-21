@@ -84,52 +84,7 @@ output: {
 	code: int
 	data: {}
 	msg: str
-} 
-
-#### 2. 查询用例
-
-```python
-url: /case/search
-input: {
-	project_id: int
-	case_type: enum(0: all, 1: func_case, 2: api_case, 3: ui_case)
 }
-output: {
-	code: int
-	data: {
-		func_case: [
-			{
-				case_id: int
-				case_name: str
-				case_descript: str
-				before_step: str
-				...
-			}, 
-			{
-				case_id: int
-				case_name: str
-				case_descript: str
-				before_step: str
-				...
-			}			 
-		], 
-		ui_case: [
-
-	 	], 
-		api_case: [
-
-	 	], 
-		automatic_case: [
-
-	 	]
-	}
-	msg: str
-} 
-```
-
-3. 
-
-
 
 TODO<2024-06-20, @xcx>  熟悉 flask, 代码模块化 
 
@@ -170,120 +125,6 @@ base_case_id: int fk case_base
 id: int pk
 caseid: int 
 script: str(1024)  api 脚本
-
-
-
-
-### database design
-
-To record test cases in a database, you can design a table with the following columns:
-
-1. **Test Case ID**: A unique identifier for each test case.
-2. **Test Case Name**: A descriptive name for the test case.
-3. **Test Case Type**: A field to indicate the type of test case (e.g., functionality, UI).
-4. **Test Case Description**: A detailed description of the test case.
-5. **Test Steps**: The steps to execute the test case.
-6. **Expected Results**: The expected results of the test case.
-7. **Actual Results**: The actual results of the test case.
-8. **Status**: The status of the test case (e.g., pass, fail).
-9. **Assigned To**: The person responsible for executing the test case.
-10. **Created Date**: The date when the test case was created.
-11. **Last Updated Date**: The date when the test case was last updated.
-
-You can create additional columns based on your specific requirements. This table structure will allow you to store and manage different types of test cases in your database effectively.
-
-
-```python
-@app.route('/func_case', methods=['POST'])
-def create_func_case():
-	data = request.json
-	func_case = FuncCase(func_detail=data['func_detail'])
-	db.session.add(func_case)
-	db.session.commit()
-	return jsonify(func_case.to_dict()), 201
-
-@app.route('/func_case/<int:id>', methods=['GET'])
-def get_func_case(id):
-	func_case = FuncCase.query.get(id)
-	if func_case is None:
-		return jsonify({'message': 'FuncCase not found'}), 404
-	return jsonify(func_case.to_dict())
-
-@app.route('/func_case/<int:id>', methods=['PUT'])
-def update_func_case(id):
-	func_case = FuncCase.query.get(id)
-	if func_case is None:
-		return jsonify({'message': 'FuncCase not found'}), 404
-	data = request.json
-	func_case.func_detail = data['func_detail']
-	db.session.commit()
-	return jsonify(func_case.to_dict())
-
-@app.route('/func_case/<int:id>', methods=['DELETE'])
-def delete_func_case(id):
-	func_case = FuncCase.query.get(id)
-	if func_case is None:
-		return jsonify({'message': 'FuncCase not found'}), 404
-	db.session.delete(func_case)
-	db.session.commit()
-	return jsonify({'message': 'FuncCase deleted'})
-```
- 
- 
- 
-```python
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
-from sqlalchemy.orm import sessionmaker
-
-Base = declarative_base()
-
-class Case(Base):
-	__tablename__ = 'case'
-	id = Column(Integer, primary_key=True)
-	type = Column(String(50))
-	
-	__mapper_args__ = {
-		'polymorphic_identity':'case',
-		'polymorphic_on':type
-	}
-
-class FuncCase(Case):
-	__tablename__ = 'func_case'
-	id = Column(Integer, ForeignKey('case.id'), primary_key=True)
-	func_detail = Column(String(100))  # FuncCase特有的字段
-	
-	__mapper_args__ = {
-		'polymorphic_identity':'func_case',
-	}
-
-class ApiCase(Case):
-	__tablename__ = 'api_case'
-	id = Column(Integer, ForeignKey('case.id'), primary_key=True)
-	api_detail = Column(String(100))  # ApiCase特有的字段
-	
-	__mapper_args__ = {
-		'polymorphic_identity':'api_case',
-	}
-	
-```
-
-读取成字典
-```python
-# 确保已安装 pandas 和 openpyxl
-# 读取 Excel 文件
-try:
-    df = pd.read_excel('/Users/xcx/WorkSpaces/BlueFlame/flame-flask/static/func_case_template.xlsx', engine='openpyxl')
-    df = df.to_dict()
-    # 查看数据
-    for k, v in df.items():
-        print(type(k))
-        print(type(v))
-        print(k, v)
-        print('-'*80)
-except Exception as e:
-    print("Error occurred while reading Excel file:", str(e))
-```
 
 
 # 20240701
@@ -489,9 +330,10 @@ plan 相关的数据表设计
 <!-- done -->
 project表:
 	id: int
-	project_id: int, 
+	project_id: int,  # user_id + rand() 进行sha1运算
 	project_name: str, 
-	project_desc: str, 
+	project_desc: str,
+	is_init: bool, 
 	create_time: date, 
 	update_time: date
 
@@ -514,12 +356,12 @@ plan_case表:
 
 case表:
 	id: int
-	case_id_by_user: str    
+	id_by_user: str    		# 这个字段记录为一个hash值 -> 在初始化case的时候生成字段 -> 先id后id_by_user
 	case_type: str                #enum{func_case, api_case}
-	case_detail: json             #_tag_case_detail
-	cast_state: enum,             #_tag_case_state_enum
-	user_id: str
-	project_id: int
+	case_detail: json             #_tag_case_detail -> 源数据
+	case_hash: str # 参考git这一块的设计,git是如何识别两次提交的不同的内容
+	user_id: str					# init_user
+	project_id: int                # for_project
 	create_time: date
 	update_time: date
 
@@ -544,11 +386,15 @@ case_detail_tag:
 
 	func_case
 	{
-			case_name: str
+		"case_num": str,
+		"case_name": str,
 		"test_env": str,
-		"belong_model": str,
-		"expected_result": str,
-		"test_step": str, 
+		"case_module": str,
+		"case_condition": str,
+		"case_step": str,
+		"case_expect": str,
+		"case_actual": str,
+		"create_time": date
 	},
 
 	api_case
@@ -643,21 +489,11 @@ user表:
 	- 可修改用户名、密码
 	- 原密码、修改密码、确认密码
 
-### 技术选型
+# 20240720
 
-- 使用flask创建服务端网络服务
-- 使用pydantic进行orm检验
-- 数据库控制
-	- 使用postgresql数据库
-	- 使用flask-sqlalchemy的orm模型对数据库表进行创建
-	- 使用sqlalchemy-engine-connection-pooling对数据库进行连接池控制
+### Case表重构
 
-#### 重构顺序
-
-- 先重构User表.对登录、注册进行重构
-	- 先疏通sqlalchemy这一块逻辑
-		- 先对sqlalchemy进行理论学习
-			- 了解他是如何进行工作的
-			- 了解他有那些部分
-			- 了解他的使用方法
-			- 了解他的示例
+Case的需求:
+1、首先.case是源数据.只针对project级别下的case进行修改的记录
+2、project下的case的级别类似master分支.在git当中master分支通过设置规则进行保护.在这里则直接把第一次提交的case作为master分支.
+3、git当中在规则条件下提交pr进行合并.这里通过创建plan.执行了plan以后提交pr进行合并.每一个plan类似一个commit.提交合并要记录plan_id作为commit的id
