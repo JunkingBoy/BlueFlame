@@ -17,8 +17,9 @@ class User(db.Model):
     id: Column[int] = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id: Column[str] = db.Column(db.String(16), unique=True, nullable=False)
     user_name: Column[str] = db.Column(db.String(16), unique=False, nullable=False)
-    phone: Column[str] = db.Column(db.String(11), unique=True, nullable=False)
+    phone: Column[str] = db.Column(db.String(12), unique=True, nullable=False)
     password: Column[str] = db.Column(db.String(120), unique=False, nullable=False)
+    is_logout: Column[bool] = db.Column(db.Boolean, unique=False, nullable=False, default=False)
     create_time: Column[datetime] = db.Column(db.TIMESTAMP(timezone=True),
                          nullable=False,
                          default=DateUtil.now)

@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-22 02:31:29
+LastEditTime: 2024-07-22 03:00:15
 Description: 
 '''
 from model import db
@@ -66,24 +66,27 @@ class ProjectService:
 
     @staticmethod
     def delete(project_id: str, user_id: str) -> ServiceResult:
-        project_creator: Project | None
+        temp_project: Project | None
         new_project_id: str = ""
 
         try:
-            project_creator = db.session.query(Project).filter(
+            temp_project = db.session.query(Project).filter(
                 Project.project_id == project_id,
                 Project.creator == user_id,
                 Project.is_delete == False
             ).first()
 
-            if project_creator is None:
+            if temp_project is None:
                 return ServiceResult.fail("查无此项目或者您不可以删除这个项目")
             else:
                 new_project_id = sha256_str(str(f"{now()}{user_id}"))
                 db.session.query(ProjectUser).filter(
                     ProjectUser.project_id == project_id).delete(synchronize_session=False)
-                db.session.query(Project).filter(
-                    Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
+                # db.session.query(Project).filter(
+                #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
+                temp_project.project_id = new_project_id # type: ignore
+                temp_project.is_delete = True # type: ignore
+                temp_project.update_time = now() # type: ignore
                 db.session.commit()
                 return ServiceResult.success("项目信息删除成功")
         except Exception as e:

@@ -75,12 +75,21 @@ class UserLoginDTO(BaseDTO):
             raise ValueError('Password must be between 6 and 128 characters long')
         return v
 
-class UserModifyDTO(BaseDTO):
-    name: Annotated[
+class UserLogoutDTO(BaseDTO):
+    password: Annotated[
         str,
-        Field(min_length=1, max_length=16, description="User's name string")
+        Field(min_length=6, max_length=128, description="User's password")
     ]
 
+    @field_validator('password')
+    def check_password_length(cls, v):
+        if not isinstance(v, str):
+            raise ValueError('Password must be a string')
+        if len(v) < 6 or len(v) > 128:
+            raise ValueError('Password must be between 6 and 128 characters long')
+        return v
+
+class UserModifyPasswordDTO(BaseDTO):
     password: Annotated[
         str,
         Field(min_length=6, max_length=16, description="User's password")
@@ -95,12 +104,6 @@ class UserModifyDTO(BaseDTO):
         str,
         Field(min_length=6, max_length=16, description="User's password")
     ]
-
-    @field_validator('name')
-    def check_name_length(cls, v: str):
-        if len(v) < 1 or len(v) > 16:
-            raise ValueError('name must be between 1 and 16 characters long')
-        return v
     
     @field_validator('password')
     def check_password_length(cls, v: str):
