@@ -18,16 +18,24 @@ def create_project() -> Response:
     try:
         project = ProjectCreateDTO(**request.get_json())
     except ValidationError as e:
-        print("222222")
         return R.err(ProjectCreateDTO.custom_errors(e))
 
-    print("here")
     result = ProjectService.create(project, get_user_id())
     if result.ok:
         return R.ok(result.content)
     else:
         return R.err(result.content)
 
+@bp.route("/delete/<string:project_id>", methods=["DELETE"])
+@jwt_required()
+def delete_project(project_id: str) -> Response:
+    from service.ProjectService import ProjectService
+    
+    result = ProjectService.delete(project_id, get_user_id())
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 # @bp.route("/modify", methods=["PUT"])
 # @jwt_required()
@@ -44,20 +52,6 @@ def create_project() -> Response:
 #         return R.ok(result.content)
 #     else:
 #         return R.err(result.content)
-
-
-
-# @bp.route("/delete/<string:project_id>", methods=["DELETE"])
-# @jwt_required()
-# def delete_project(project_id: str) -> Response:
-#     from service.ProjectService import ProjectService
-    
-#     result = ProjectService.delete(project_id)
-#     if result.ok:
-#         return R.ok(result.content)
-#     else:
-#         return R.err(result.content)
-
 
 # @bp.route("/all/info", methods=["GET"])
 # @jwt_required()
@@ -82,16 +76,16 @@ def create_project() -> Response:
 #         return R.err(result.content)
 
 
-# @bp.route('/info/', methods=['GET'])
-# @jwt_required()
-# def get_projects_by_user() -> Response:
-#     from service.ProjectService import ProjectService
-#     user_id = get_user_id()
-#     result = ProjectService.get_project_by_user_id(user_id)
-#     if result.ok:
-#         return R.ok(result.content)
-#     else:
-#         return R.err(result.content)
+@bp.route('/info', methods=['GET'])
+@jwt_required()
+def get_projects_by_user() -> Response:
+    from service.ProjectService import ProjectService
+    user_id = get_user_id()
+    result = ProjectService.get_project_creator_by_user_id(user_id)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 # @bp.route('/user/case/all', methods=['GET'])

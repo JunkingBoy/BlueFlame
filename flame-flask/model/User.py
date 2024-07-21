@@ -7,22 +7,22 @@ Description:
 '''
 from . import db
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP
-from utils import DateUtil
+from sqlalchemy import Column
 
+from utils import DateUtil
 
 class User(db.Model):
     __tablename__ = 'user'
     # 这里定义表字段(元数据)
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id: Column[str] = Column(String(16), unique=True, nullable=False)
-    user_name: Column[str] = Column(String(16), unique=False, nullable=False)
-    phone: Column[str] = Column(String(11), unique=True, nullable=False)
-    password: Column[str] = Column(String(120), unique=False, nullable=False)
-    create_time: Column[datetime] = Column(TIMESTAMP(timezone=True),
+    id: Column[int] = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id: Column[str] = db.Column(db.String(16), unique=True, nullable=False)
+    user_name: Column[str] = db.Column(db.String(16), unique=False, nullable=False)
+    phone: Column[str] = db.Column(db.String(11), unique=True, nullable=False)
+    password: Column[str] = db.Column(db.String(120), unique=False, nullable=False)
+    create_time: Column[datetime] = db.Column(db.TIMESTAMP(timezone=True),
                          nullable=False,
                          default=DateUtil.now)
-    update_time: Column[datetime] = Column(TIMESTAMP(timezone=True),
+    update_time: Column[datetime] = db.Column(db.TIMESTAMP(timezone=True),
                          nullable=False,
                          default=DateUtil.now,
                          onupdate=DateUtil.now)

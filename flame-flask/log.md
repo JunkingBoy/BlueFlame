@@ -330,12 +330,16 @@ plan 相关的数据表设计
 <!-- done -->
 project表:
 	id: int
-	project_id: int,  # user_id + rand() 进行sha1运算
+	project_id: int, 
 	project_name: str, 
 	project_desc: str,
 	is_init: bool, 
+	creator: str,
 	create_time: date, 
 	update_time: date
+
+project_plan表:
+
 
 plan表: 
 	id: int

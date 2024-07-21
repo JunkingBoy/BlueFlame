@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-21 04:14:27
+LastEditTime: 2024-07-21 16:44:02
 Description: 
 '''
 from datetime import datetime
@@ -10,12 +10,11 @@ from pydantic import Field, field_validator
 from typing import Optional
 from dto.BaseDTO import BaseDTO
 from utils.StringUtil import sha256_str
+from service.UserService import get_user_id
 from utils import DateUtil
 
-
 class ProjectCreateDTO(BaseDTO):
-
-    # project_id: Optional[str] = Field(default=None, description="project id")
+    project_id: Optional[str] = Field(description="project id")
     project_name: str = Field(min_length=1,
                               max_length=128,
                               description="project name")
@@ -23,9 +22,8 @@ class ProjectCreateDTO(BaseDTO):
                                         description="project description")
 
     def __init__(self, **data):
-        print("123123123123123")
-        # # 使用 sha256 基于project_name 计算 Project_ID
-        # data['project_id'] = sha256_str(data['project_name'], length=16)
+        # 使用 sha256 基于project_name 计算 Project_ID
+        data['project_id'] = sha256_str(f"{data['project_name']} {get_user_id()}")
         super().__init__(**data)
 
 # class ProjectModifyDTO(BaseDTO):
