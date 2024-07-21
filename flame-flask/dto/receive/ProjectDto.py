@@ -4,6 +4,7 @@ from typing import Optional
 from dto.BaseDTO import BaseDTO
 from utils.StringUtil import sha256_str
 from utils import DateUtil
+from service.UserService import get_user_id
 
 
 class ProjectCreateDTO(BaseDTO):
@@ -17,7 +18,7 @@ class ProjectCreateDTO(BaseDTO):
 
     def __init__(self, **data):
         # 使用 sha256 基于project_name 计算 Project_ID
-        data['project_id'] = sha256_str(data['project_name'], length=16)
+        data['project_id'] = sha256_str(f"{data['project_name']} {get_user_id()}" , length=16)
         super().__init__(**data)
 
 class ProjectModifyDTO(BaseDTO):
@@ -31,7 +32,7 @@ class ProjectModifyDTO(BaseDTO):
     def __init__(self, **data):
         # 修改项目的时候, 需要生成新的 project_id
         if 'project_name' in data:
-            data['new_project_id'] = sha256_str(data['project_name'], length=16)
+            data['new_project_id']= sha256_str(f"{data['project_name']} {get_user_id()}" , length=16)
         super().__init__(**data)
 
 
