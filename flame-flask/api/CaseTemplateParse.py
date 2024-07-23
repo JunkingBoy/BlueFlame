@@ -2,14 +2,14 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-20 23:54:30
+LastEditTime: 2024-07-23 18:58:17
 Description: 
 '''
 from datetime import datetime
 import json
 import os
 from service.CaseTemplate import CaseTemplate
-# from service.CaseService import CaseService
+from service.CaseService import CaseService
 from service.UserService import get_user_id
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
@@ -99,3 +99,9 @@ def upload_file():
         # out_file.write(str(R.ok(case_template.get_data())))
 
     return R.ok(case_data)
+
+# @bp.route('/test', methods=['POST'])
+# @jwt_required()
+# def upload():
+#     CaseService.validate_input_data({})
+#     return R.ok("")

@@ -4,7 +4,6 @@ from typing import Annotated
 
 from dto.BaseDTO import BaseDTO 
 
-
 class UserRegisterDTO(BaseDTO):
     phone: Annotated[
         str,

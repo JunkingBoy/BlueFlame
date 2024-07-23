@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-22 03:23:31
+LastEditTime: 2024-07-22 17:58:49
 Description: 
 '''
 from typing import Optional
@@ -81,9 +81,9 @@ def user_modify() -> Response:
         return R.err(UserModifyPasswordDTO.custom_errors(e))
     
     if isinstance(user, UserModifyNameDTO):
-        result = UserService.modify_name(user, get_user_id())
+        result: ServiceResult = UserService.modify_name(user, get_user_id())
     else:
-        result = UserService.modify_password(user, get_user_id())
+        result: ServiceResult = UserService.modify_password(user, get_user_id())
 
     if result.ok:
         return R.ok(result.content)
@@ -95,8 +95,8 @@ def user_modify() -> Response:
 def user_info():
     return R.ok(get_user_id())
 
-@bp.route('/logout', methods=['GET'])
-@jwt_required()
-def logout():
-    session.clear()
-    return R.ok("Logout success")
+# @bp.route('/logout', methods=['GET'])
+# @jwt_required()
+# def logout():
+#     session.clear()
+#     return R.ok("Logout success")

@@ -1,10 +1,11 @@
-from flask import Blueprint, Response
+from flask import Blueprint, Response, request
 from flask_jwt_extended import jwt_required
 from pydantic import ValidationError
-from utils.CommonResponse import R
-from flask import request
-from service.UserService import get_user_id 
+from typing import Optional
+
 from model import Project
+from service.UserService import get_user_id, ServiceResult
+from utils.CommonResponse import R
 
 bp = Blueprint("project", __name__)
 
@@ -16,11 +17,11 @@ def create_project() -> Response:
     from dto.receive.ProjectDto import ProjectCreateDTO
 
     try:
-        project = ProjectCreateDTO(**request.get_json())
+        project: Optional[ProjectCreateDTO] = ProjectCreateDTO(**request.get_json())
     except ValidationError as e:
         return R.err(ProjectCreateDTO.custom_errors(e))
 
-    result = ProjectService.create(project, get_user_id())
+    result: ServiceResult = ProjectService.create(project, get_user_id())
     if result.ok:
         return R.ok(result.content)
     else:
@@ -31,27 +32,28 @@ def create_project() -> Response:
 def delete_project(project_id: str) -> Response:
     from service.ProjectService import ProjectService
     
-    result = ProjectService.delete(project_id, get_user_id())
+    result: ServiceResult = ProjectService.delete(project_id, get_user_id())
     if result.ok:
         return R.ok(result.content)
     else:
         return R.err(result.content)
 
-# @bp.route("/modify", methods=["PUT"])
-# @jwt_required()
-# def modify_project() -> Response:
-#     from service.ProjectService import ProjectService
-#     from dto.receive.ProjectDto import ProjectModifyDTO 
-#     try:
-#         project = ProjectModifyDTO(**request.get_json())
-#     except ValidationError as e:
-#         return R.err(ProjectModifyDTO.custom_errors(e))
+@bp.route("/modify", methods=["PUT"])
+@jwt_required()
+def modify_project() -> Response:
+    from service.ProjectService import ProjectService
+    from dto.receive.ProjectDto import ProjectModifyDTO
+    
+    try:
+        project: Optional[ProjectModifyDTO] = ProjectModifyDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(ProjectModifyDTO.custom_errors(e))
 
-#     result = ProjectService.modify(project, get_user_id())
-#     if result.ok:
-#         return R.ok(result.content)
-#     else:
-#         return R.err(result.content)
+    result: ServiceResult = ProjectService.modify(project, get_user_id())
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 # @bp.route("/all/info", methods=["GET"])
 # @jwt_required()
