@@ -39,8 +39,8 @@ class UserService:
 
         # 检查电话号码是否已存在
         existing_user = db.session.query(User).filter(
-            User.phone == user_dto.phone,
-            User.is_logout == False
+            User.phone == user_dto.phone, # type: ignore
+            User.is_logout == False # type: ignore
         ).first()
 
         if existing_user:
@@ -63,8 +63,8 @@ class UserService:
 
         try:
             existing_user = db.session.query(User).filter(
-                User.phone == user_dto.phone,
-                User.is_logout == False
+                User.phone == user_dto.phone, # type: ignore
+                User.is_logout == False # type: ignore
             ).first()
 
             if not existing_user:
@@ -72,8 +72,8 @@ class UserService:
 
             #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
             user = db.session.query(User).filter(
-                User.phone == user_dto.phone,
-                User.is_logout == False
+                User.phone == user_dto.phone, # type: ignore
+                User.is_logout == False # type: ignore
             ).first()
 
             if user is None:
@@ -100,8 +100,8 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id,
-                User.is_logout == False
+                User.uid == user_id, # type: ignore
+                User.is_logout == False # type: ignore
             ).first()
 
             if user is None:
@@ -133,8 +133,8 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id,
-                User.is_logout == False
+                User.uid == user_id, # type: ignore
+                User.is_logout == False # type: ignore
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
@@ -160,8 +160,8 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id,
-                User.is_logout == False
+                User.uid == user_id, # type: ignore
+                User.is_logout == False # type: ignore
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")

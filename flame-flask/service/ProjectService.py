@@ -35,11 +35,6 @@ class ProjectService:
         project_dict: Dict[str, Any] = {}
 
         try:
-            project_dict = project.model_dump()
-            project_dict['user_id'] = user_id
-            p = Project(**project_dict)
-            pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
-
             project_number = db.session.query(func.count(Project.pid)).filter( # type: ignore
                 Project.creator == user_id,
                 Project.is_delete == False
@@ -54,6 +49,10 @@ class ProjectService:
             if existed:
                 return ServiceResult.fail(f"there is a same project")
             else:
+                project_dict = project.model_dump()
+                project_dict['user_id'] = user_id
+                p = Project(**project_dict)
+                pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
                 db.session.add(p)
                 db.session.add(pu)
                 db.session.commit()

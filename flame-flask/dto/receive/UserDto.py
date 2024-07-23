@@ -7,15 +7,15 @@ from dto.BaseDTO import BaseDTO
 class UserRegisterDTO(BaseDTO):
     phone: Annotated[
         str,
-        Field(min_length=11, max_length=11, description="User's phone number")
+        Field(..., min_length=11, max_length=11, description="User's phone number")
     ]
     password: Annotated[
         str,
-        Field(min_length=6, max_length=16, description="User's password")
+        Field(..., min_length=6, max_length=16, description="User's password")
     ]
     password_confirm: Annotated[
         str,
-        Field(min_length=6, max_length=16, description="Confirmation of the user's password")
+        Field(..., min_length=6, max_length=16, description="Confirmation of the user's password")
     ]
 
     @field_validator('phone')
@@ -47,15 +47,15 @@ class UserRegisterDTO(BaseDTO):
         if 'password' in values.data and v != values.data['password']:
             raise ValueError('Passwords do not match')
         return v
-        
+   
 class UserLoginDTO(BaseDTO):
     phone: Annotated[
         str,
-        Field(min_length=11, max_length=11, description="User's phone number")
+        Field(..., min_length=11, max_length=11, description="User's phone number")
     ]
     password: Annotated[
         str,
-        Field(min_length=6, max_length=128, description="User's password")
+        Field(..., min_length=6, max_length=128, description="User's password")
     ]
 
     @field_validator('phone')
@@ -77,7 +77,7 @@ class UserLoginDTO(BaseDTO):
 class UserLogoutDTO(BaseDTO):
     password: Annotated[
         str,
-        Field(min_length=6, max_length=128, description="User's password")
+        Field(..., min_length=6, max_length=128, description="User's password")
     ]
 
     @field_validator('password')
@@ -91,17 +91,17 @@ class UserLogoutDTO(BaseDTO):
 class UserModifyPasswordDTO(BaseDTO):
     password: Annotated[
         str,
-        Field(min_length=6, max_length=16, description="User's password")
+        Field(..., min_length=6, max_length=16, description="User's password")
     ]
 
     new_password: Annotated[
         str,
-        Field(min_length=6, max_length=16, description="User's password")
+        Field(..., min_length=6, max_length=16, description="User's password")
     ]
 
     new_password_confirm: Annotated[
         str,
-        Field(min_length=6, max_length=16, description="User's password")
+        Field(..., min_length=6, max_length=16, description="User's password")
     ]
     
     @field_validator('password')
@@ -121,11 +121,11 @@ class UserModifyPasswordDTO(BaseDTO):
         if 'new_password' in values.data and v != values.data['new_password']:
             raise ValueError('Passwords do not match')
         return v
-    
+ 
 class UserModifyNameDTO(BaseDTO):
     name: Annotated[
         str,
-        Field(min_length=1, max_length=16, description="User's name string")
+        Field(..., min_length=1, max_length=16, description="User's name string")
     ]
 
     @field_validator('name')

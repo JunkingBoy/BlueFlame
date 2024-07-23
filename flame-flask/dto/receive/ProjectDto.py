@@ -2,21 +2,22 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-22 17:32:21
+LastEditTime: 2024-07-23 21:58:25
 Description: 
 '''
 from pydantic import Field, field_validator
 from typing import Optional
+
 from dto.BaseDTO import BaseDTO
 from utils.StringUtil import sha256_str
 from service.UserService import get_user_id
 
 class ProjectCreateDTO(BaseDTO):
-    project_id: Optional[str] = Field(description="project id")
-    project_name: str = Field(min_length=1,
+    project_id: Optional[str] = Field(..., min_length=16, max_length=16, description="project id")
+    project_name: str = Field(..., min_length=1,
                               max_length=128,
                               description="project name")
-    project_desc: Optional[str] = Field(None,
+    project_desc: Optional[str] = Field(...,
                                         description="project description")
 
     def __init__(self, **data):
