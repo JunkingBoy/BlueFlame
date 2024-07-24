@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-19 19:49:27
+LastEditTime: 2024-07-23 18:11:04
 Description: 
 '''
 import os
@@ -46,6 +46,8 @@ def create_app() -> Flask:
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    app.config['SQLALCHEMY_ECHO'] = True
+
     appHandler: Handler = log()
 
     app.logger.addHandler(appHandler)
@@ -75,6 +77,7 @@ def get_value_from_yaml(key) -> Any:
 
 def log() -> Handler:
     handler: Handler = logging.StreamHandler()
+    # handler.setLevel(logging.DEBUG)
     handler.setLevel(logging.INFO)
     formatter: object = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

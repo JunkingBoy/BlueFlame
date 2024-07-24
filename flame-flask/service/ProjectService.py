@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-22 03:00:15
+LastEditTime: 2024-07-24 21:31:44
 Description: 
 '''
 from model import db
@@ -19,7 +19,7 @@ from model.Project import Project, ProjectUser
 from model.Case import Case, CaseState
 from model.User import User
 from service.ServiceResult import ServiceResult
-# from dto.receive.ProjectDto import ProjectModifyDTO
+from dto.receive.ProjectDto import ProjectModifyDTO
 from dto.response.UserDto import UserDTO
 from dto.response.ProjectDto import ProjectDTO, ProjectCaseInfoDTO
 from dto.response.CaseDto import CaseCountDTO
@@ -35,94 +35,89 @@ class ProjectService:
         project_dict: Dict[str, Any] = {}
 
         try:
-            project_dict = project.model_dump()
-            project_dict['user_id'] = user_id
-            p = Project(**project_dict)
-            pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
-
-            project_number = db.session.query(func.count(Project.project_id)).filter(
+            project_number = db.session.query(func.count(Project.pid)).filter( # type: ignore
                 Project.creator == user_id,
                 Project.is_delete == False
             ).scalar()
 
             if project_number >= 5:
-                return ServiceResult.fail(f"可创建项目数量已达上限")
+                return ServiceResult.fail(f"can not create more project")
 
+            project_dict = project.model_dump()
+            project_dict['user_id'] = user_id
+            p = Project(**project_dict)
             existed = db.session.query(Project).filter(
-                Project.project_id == p.project_id
+                Project.pid == p.pid # type: ignore
             ).first()
             if existed:
-                return ServiceResult.fail("已经存在同名项目")
+                return ServiceResult.fail(f"there is a same project")
             else:
+                pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
                 db.session.add(p)
                 db.session.add(pu)
                 db.session.commit()
-                return ServiceResult.success("创建项目成功")
+                return ServiceResult.success(f"create project success")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"create project fail {e}")
+            current_app.logger.error(f"create project fail {e}", exc_info=True)
             # TODO<2024-07-06, @xcx> 最好有一个错误的表, 可以查询错误类型和对应的报错信息, 不要把程序的错误报出去给用户
-            return ServiceResult.fail(f"创建项目失败: {str(e)}")
+            return ServiceResult.fail(f"create fail: {str(e)}")
 
     @staticmethod
     def delete(project_id: str, user_id: str) -> ServiceResult:
-        temp_project: Project | None
+        temp_project: Optional[Project] = None
         new_project_id: str = ""
 
         try:
             temp_project = db.session.query(Project).filter(
-                Project.project_id == project_id,
-                Project.creator == user_id,
-                Project.is_delete == False
+                Project.pid == project_id, # type: ignore
+                Project.creator == user_id, # type: ignore
+                Project.is_delete == False # type: ignore
             ).first()
 
             if temp_project is None:
-                return ServiceResult.fail("查无此项目或者您不可以删除这个项目")
+                return ServiceResult.fail(f"can not find project or this project is not for you")
             else:
                 new_project_id = sha256_str(str(f"{now()}{user_id}"))
                 db.session.query(ProjectUser).filter(
-                    ProjectUser.project_id == project_id).delete(synchronize_session=False)
+                    ProjectUser.pid == project_id).delete(synchronize_session=False) # type: ignore
                 # db.session.query(Project).filter(
                 #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
-                temp_project.project_id = new_project_id # type: ignore
+                db.session.query(Case).filter(
+                    Case.pid == project_id).update({"pid": new_project_id}) # type: ignore
+                temp_project.pid = new_project_id # type: ignore
                 temp_project.is_delete = True # type: ignore
                 temp_project.update_time = now() # type: ignore
                 db.session.commit()
-                return ServiceResult.success("项目信息删除成功")
+                return ServiceResult.success(f"delete project success")
         except Exception as e:
             db.session.rollback()
-            return ServiceResult.fail(f"删除项目失败: {str(e)}")
+            current_app.logger.info(f"delete project fail: {str(e)}", exc_info=True)
+            return ServiceResult.fail(f"delete project fail: {str(e)}")
 
-    # @staticmethod
-    # def modify(p: ProjectModifyDTO, user_id: str) -> ServiceResult:
-    #     try:
-    #         project_users = db.session.query(ProjectUser).filter_by(
-    #             project_id=p.project_id).all()
-    #         is_my_project = any(pu.user_id == user_id for pu in project_users)
+    @staticmethod
+    def modify(project: ProjectModifyDTO, user_id: str) -> ServiceResult:
+        temp_project: Optional[Project] = None
 
-    #         if not is_my_project:
-    #             return ServiceResult.fail("查无此项目或者您不属于这个项目")
-    #         else:
-    #             existd = Project.query.filter_by(project_name=p.project_name).first()
-    #             if existd:
-    #                 return ServiceResult.fail("已经存在同名项目")
+        try:
+            temp_project = db.session.query(Project).filter(
+                Project.pid == project.project_id, # type: ignore
+                Project.creator == user_id, # type: ignore
+                Project.is_delete == False # type: ignore
+            ).first()
 
-    #         # TODO<2024-07-06, @xcx> 这里问题: 有可能一个项目多个 User, 是否有 owner 的权限才可以改?(目前没有 project'owner 的标识)
-    #         # 修改项目信息
-    #         db.session.query(Project).filter_by(
-    #             project_id=p.project_id).update({
-    #                 'project_id': p.new_project_id,
-    #                 'project_name': p.project_name,
-    #                 'project_desc': p.project_desc
-    #             })
-    #         db.session.query(ProjectUser).filter_by(project_id=p.project_id).update({'project_id': p.new_project_id})
-    #         db.session.commit()
-    #         return ServiceResult.success("修改项目信息成功")
-    #     except Exception as e:
-    #         db.session.rollback()
-    #         # current_app.logger.info(f"更改项目失败: {str(e)}")
-    #         return ServiceResult.fail(f"更改项目失败: {str(e)}")
+            if not temp_project:
+                return ServiceResult.fail(f"can not find project or this project is not for you")
 
+            # 修改项目信息
+            temp_project.project_name = project.project_name
+            temp_project.project_desc = project.project_desc
+            db.session.commit()
+            return ServiceResult.success(f"modify project success")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.info(f"modify project fail: {str(e)}", exc_info=True)
+            return ServiceResult.fail(f"moify fail: {str(e)}")
 
 #     @staticmethod
 #     def all_project() -> ServiceResult:
@@ -201,17 +196,17 @@ class ProjectService:
         try:
             # 获取用户创建的项目的id
             project_ids = [
-                pu.project_id
+                pu.pid
                 for pu in db.session.query(ProjectUser).filter(ProjectUser.user_id == user_id).all() # type: ignore
             ]
 
             if not project_ids:
-                return ServiceResult.fail("No projects found for this user!")
+                return ServiceResult.fail(f"No projects found for this user")
 
             # 获取项目信息
             projects = db.session.query(Project).filter(
-                Project.project_id.in_(project_ids),
-                Project.creator == user_id,
+                Project.pid.in_(project_ids), # type: ignore
+                Project.creator == user_id, # type: ignore
             ).all()
 
             for project in projects:
@@ -226,9 +221,9 @@ class ProjectService:
 
             return ServiceResult.success([project.model_dump() for project in project_list]) # type: ignore
         except Exception as e:
-            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}")
+            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"Failed to get projects: {str(e)}") 
-        
+
     @staticmethod
     def get_all_project_by_user_id(user_id: str) -> ServiceResult:
         projects: List[Project] = []
@@ -243,15 +238,15 @@ class ProjectService:
 
         try:
             project_ids = [
-                pu.project_id
+                pu.pid
                 for pu in db.session.query(ProjectUser).filter_by(user_id=user_id).all() # type: ignore
             ]
 
             if not project_ids:
-                return ServiceResult.fail("No projects found for this user!")
+                return ServiceResult.fail(f"No projects found for this user")
             
             projects = db.session.query(Project).filter(
-                Project.project_id.in_(project_ids)
+                Project.pid.in_(project_ids) # type: ignore
             ).all()
 
             for project in projects:
@@ -266,7 +261,7 @@ class ProjectService:
             
             return ServiceResult.success([project.model_dump() for project in project_list]) # type: ignore
         except Exception as e:
-            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}")
+            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"Failed to get projects: {str(e)}")
         pass
         

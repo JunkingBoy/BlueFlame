@@ -2,14 +2,14 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-21 00:23:34
+LastEditTime: 2024-07-24 18:41:09
 Description: 
 '''
-from typing import List, Dict
-from enum import Enum, unique
 from . import db
+from enum import Enum, unique
 from datetime import datetime
-from sqlalchemy import TIMESTAMP, Column, Enum as SQLEnum, Integer, String, Text
+from sqlalchemy import JSON
+from typing import Optional, Dict, Any
 
 from utils import DateUtil
 
@@ -18,42 +18,54 @@ from utils import DateUtil
 class CaseState(Enum):
     WAITING = "待执行"
     PASS = "测试通过"
-    ERROR_BUT_NOT_VERIFY = "测试失败, 待确认"
-    ERROR_VERIFYED = "测试失败, 已确认"
+    ERROR_BUT_NOT_VERIFY = "测试失败(待确认)"
+    ERROR_VERIFYED = "测试失败(已确认)"
     UNKNOWN = "未知状态"
     # 添加其他状态...
 
+    @staticmethod
+    def get_state(k: str) -> str:
+        return CaseState(k).value
+    
+    @classmethod
+    def from_str_get_state(cls: type['CaseState'], excel_str: str) -> Optional['CaseState']:
+        value_to_member: Dict[str, 'CaseState'] = { member.value: member for member in cls }
+        return value_to_member.get(excel_str)
 
 class Case(db.Model):
     __tablename__ = 'case'
-    id: Column[int] = Column(Integer, primary_key=True, autoincrement=True)
-    id_by_user: Column[str] = Column(String(200), nullable=False)
-    case_type: Column[str] = Column(String(20), nullable=False)
-    case_detail: Column[str] = Column(Text, nullable=False)
-    case_hash: Column[str] = Column(String(80), nullable=False)
-    user_id: Column[str] = Column(String(80), nullable=False)
-    project_id: Column[str] = Column(String(16), nullable=False)
-    create_time: Column[datetime] = Column(TIMESTAMP(timezone=True),
-                         nullable=False,
-                         default=DateUtil.now)
-    update_time: Column[datetime] = Column(TIMESTAMP(timezone=True),
-                         nullable=False,
-                         default=DateUtil.now,
-                         onupdate=DateUtil.now)
+    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    cid: str = db.Column(db.String(18), unique=True, nullable=False)
+    pid: str = db.Column(db.String(17), unique=False, nullable=False)
+    uid: str = db.Column(db.String(80), unique=False, nullable=False)
+    case_type: str = db.Column(db.String(20), unique=False, nullable=False)
+    case_detail: JSON = db.Column(db.JSON, unique=False, nullable=False)
+    case_row_hash: str = db.Column(db.String(80), unique=False, nullable=False)
+    create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
+                        nullable=False,
+                        default=DateUtil.now)
+    update_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
+                        nullable=False,
+                        default=DateUtil.now,
+                        onupdate=DateUtil.now)
 
-    def __init__(self, project_id: str, user_id: str, id_by_user: str):
-        self.id_by_user = id_by_user # type: ignore
-        self.project_id = project_id # type: ignore
-        self.user_id = user_id # type: ignore
+    def __init__(self, init_data, cid: str, case_type: str, project_id: str, user_id: str, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
+        super().__init__()
+        self.pid = project_id
+        self.uid = user_id
+        self.cid = cid
+        self.case_type = case_type
+        self.case_detail = init_data
+        self.case_row_hash = row_hash
 
     def __repr__(self):
-        return f"id: {self.id}, user_id: {self.user_id}, project_id: {self.project_id}, create_time: {self.create_time}, update_time: {self.update_time}"
+        return f"id: {self.id}, user_id: {self.uid}, project_id: {self.pid}, create_time: {self.create_time}, update_time: {self.update_time}"
 
     def to_dict(self) -> dict:
         return {
             "id": self.id,
-            "user_id": self.user_id,
-            "project_id": self.project_id,
+            "user_id": self.uid,
+            "project_id": self.pid,
             "case_detail": self.case_detail,
             "create_time": self.create_time, 
             "update_time": self.update_time, 

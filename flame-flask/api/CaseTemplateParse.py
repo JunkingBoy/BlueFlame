@@ -2,21 +2,21 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-20 23:54:30
+LastEditTime: 2024-07-24 22:05:03
 Description: 
 '''
-from datetime import datetime
-import json
-import os
-from service.CaseTemplate import CaseTemplate
-# from service.CaseService import CaseService
+from service.CaseService import CaseService
 from service.UserService import get_user_id
 from flask_jwt_extended import jwt_required
 from utils.CommonResponse import R
 from flask import Blueprint, request, send_file, current_app
 from werkzeug.datastructures import FileStorage
-
 from werkzeug.utils import secure_filename
+from typing import List
+
+from service.CaseProcessing import parse_process
+from utils.ExcelExtract import parse_case_template_excel
+from utils.CaseDb import CaseDbTemplate
 
 bp = Blueprint('case_parse', __name__)
 
@@ -40,10 +40,10 @@ def download_case_template_file(temp_type: str):
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             download_name=f"{file_name}")
     except FileNotFoundError as err:
-        current_app.logger.error(f"Can not found file: {err}")
+        current_app.logger.error(f"Can not found file: {err}", exc_info=True)
         return R.create(404, "File not found")
     except Exception as err:
-        current_app.logger.error(f"Error occurred: {err}")
+        current_app.logger.error(f"Error occurred: {err}", exc_info=True)
         return R.create(500, "Internal server error")
 
 def is_valid_file(file):
@@ -74,28 +74,43 @@ def upload_file():
     if not is_valid_file(file.filename):
         return R.err('Invalid file type')
 
-    case_template = CaseTemplate(file,
-                                 user_id=user_id,
-                                 case_type=case_type,
-                                 project_id=project_id)
+    # case_template = CaseTemplate(file,
+    #                              user_id=user_id,
+    #                              case_type=case_type,
+    #                              project_id=project_id)
+    # print("进来了")
+    case_template = parse_case_template_excel(file, sheet_name='')
     # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
-    print(f'case_template.get_data(): {case_template.get_data()}')
-    # CaseService.insert_data_to_db(case_template.get_data(), case_template.user_id, case_template.project_id)
+    data: List[CaseDbTemplate] = parse_process(case_template, type=case_type, pid=project_id, uid=user_id)
+    print(f'case_template.get_data(): {data[0].pid, data[0].uid, data[0].case_type, data[0].case_detail, data[0].case_row_hash}')
+    result = CaseService.create(data, get_user_id())
 
-    folder = f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}'
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    # folder = f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}'
+    # if not os.path.exists(folder):
+    #     os.makedirs(folder)
 
-    case_data = case_template.get_data()
-    if only_return_err:
-        print("only err data")
-        case_data = [row for row in case_data if row.get("dirty", False)]
+    # case_data = case_template.get_data()
+    # if only_return_err:
+    #     print("only err data")
+    #     case_data = [row for row in case_data if row.get("dirty", False)]
 
-    with open(
-            f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}/{case_template.user_id}.json',
-            'w') as out_file:
-        json.dump(case_data, out_file, indent=2)
-        out_file.flush()
+    # with open(
+    #         f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}/{case_template.user_id}.json',
+    #         'w') as out_file:
+    #     json.dump(case_data, out_file, indent=2)
+    #     out_file.flush()
         # out_file.write(str(R.ok(case_template.get_data())))
 
-    return R.ok(case_data)
+    return R.ok(result)
+
+
+@bp.route('/all', methods=['GET'])
+@jwt_required()
+def get_all_case():
+    return R.ok(CaseService.get_all_case(request.args['pid'], get_user_id()))
+
+# @bp.route('/test', methods=['POST'])
+# @jwt_required()
+# def upload():
+#     CaseService.validate_input_data({})
+#     return R.ok("")
