@@ -2,37 +2,36 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-01 19:32:30
+LastEditTime: 2024-07-23 18:11:04
 Description: 
 '''
-from datetime import timedelta
 import os
-from typing import Any
-from flask import Flask
-from flask_cors import CORS
-from flask_jwt_extended import JWTManager
 import yaml
-import utils.StringUtil as StringUtil
+import logging
+from datetime import timedelta
+from typing import Any, Dict
+from flask import Flask
 from logging import Handler
 from sqlalchemy.engine.url import URL
 from sqlalchemy.util import immutabledict
-import logging
+
+import utils.StringUtil as StringUtil
 
 def create_app() -> Flask:
     app: Flask = Flask(__name__)
     app.config['JWT_SECRET_KEY'] = StringUtil.generate_string(32)
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
-    
+    app.secret_key = StringUtil.generate_string(32) # 签署session cookie
     # 根据Docker环境变量设置数据库URI
     if os.getenv('DOCKER_ENV') == 'true':
         app.config['SQLALCHEMY_DATABASE_URI'] = URL(
-            drivername=os.getenv("DB_DRIVER"),
+            drivername=os.getenv("DB_DRIVER"), # type: ignore
             username=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             host=os.getenv("DB_HOST"),
             database=os.getenv("DB_NAME"),
-            port=int(os.getenv("DB_PORT")),
-            query={"options": "-c TimeZone=Asia/Shanghai"}
+            port=int(os.getenv("DB_PORT")), # type: ignore
+            query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
     else:
         app.config['SQLALCHEMY_DATABASE_URI'] = URL(
@@ -42,11 +41,12 @@ def create_app() -> Flask:
             host=get_value_from_yaml("db_host"),
             database=get_value_from_yaml("db_name"),
             port=get_value_from_yaml("db_port"),
-            query={"options": "-c Asia/Shanghai"}
+            query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
 
-
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    app.config['SQLALCHEMY_ECHO'] = True
 
     appHandler: Handler = log()
 
@@ -57,21 +57,27 @@ def create_app() -> Flask:
 
 
 def get_value_from_yaml(key) -> Any:
-    cwd = os.getcwd()
-    module_cwd = os.path.dirname(os.path.realpath(__file__))
+    cwd: str = os.getcwd()
+    module_cwd: str = os.path.dirname(os.path.realpath(__file__))
     os.chdir(module_cwd)
     conf = "./config.yaml"
-    with open(conf, 'r', encoding='utf-8') as stream:
-        try:
+    data: Dict[str, Any] = {}
+    try:
+        with open(conf, 'r', encoding='utf-8') as stream:
             data = yaml.safe_load(stream)
-            return data.get(key)
-        except yaml.YAMLError as e:
-            print(e)
-        finally:
-            os.chdir(cwd)
+    except yaml.YAMLError as e:
+        print(e)
+    finally:
+        os.chdir(cwd)
+
+    if key in data and data[key] is not None:
+        return data[key]
+    else:
+        return ""
 
 def log() -> Handler:
     handler: Handler = logging.StreamHandler()
+    # handler.setLevel(logging.DEBUG)
     handler.setLevel(logging.INFO)
     formatter: object = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

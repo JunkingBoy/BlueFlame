@@ -1,46 +1,50 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-23 18:31:08
+Description: 
+'''
 from . import db
 from datetime import datetime
-from dataclasses import dataclass, asdict
 
-
-@dataclass
-class UserIdentity:
-    phone: str
-    user_id: int
-
-    def to_dict(self):
-        return asdict(self)
-
+from utils import DateUtil
 
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.String(80), unique=True, nullable=False)
-    phone = db.Column(db.String(11), unique=True, nullable=False)
-    password = db.Column(db.String(120), unique=False, nullable=False)
-    create_time = db.Column(db.DateTime, default=lambda: datetime.now())
-    update_time = db.Column(db.DateTime,
-                            default=lambda: datetime.now(),
-                            onupdate=lambda: datetime.now())
+    # 这里定义表字段(元数据)
+    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    uid: str = db.Column(db.String(17), unique=True, nullable=False)
+    user_name: str = db.Column(db.String(16), unique=False, nullable=False)
+    phone: str = db.Column(db.String(12), unique=True, nullable=False)
+    password: str = db.Column(db.String(120), unique=False, nullable=False)
+    is_logout: bool = db.Column(db.Boolean, unique=False, nullable=False, default=False)
+    create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
+                        nullable=False,
+                        default=DateUtil.now)
+    update_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
+                        nullable=False,
+                        default=DateUtil.now,
+                        onupdate=DateUtil.now)
 
-    def __init__(self, phone, password):
+    def __init__(self, user_id: str, user_name: str, phone: str, password: str):
+        super().__init__()
+        # 下面的字段作用于不同的上下文
+        self.uid = user_id
+        self.user_name = user_name
         self.phone = phone
         self.password = password
-        self.user_id = phone
 
     def __repr__(self):
-        return f"id: {self.id}, user_id: {self.user_id}, phone: {self.phone}, password: {self.password}, create_time: {self.create_time}, update_time: {self.update_time}"
+        return f"id: {self.id}, user_id: {self.uid}, user_name: {self.user_name}, phone: {self.phone}, password: {self.password}, create_time: {self.create_time}, update_time: {self.update_time}"
 
     def to_dict(self) -> dict:
         return {
             "id": self.id,
-            "user_id": self.user_id,
+            "user_id": self.uid,
+            "user_name": self.user_name,
             "phone": self.phone,
             "password": self.password,
             "create_time": self.create_time.isoformat(),
             "update_time": self.update_time.isoformat()
         }
-
-    def create(self):
-        db.session.add(self)
-        db.session.commit()

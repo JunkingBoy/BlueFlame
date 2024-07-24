@@ -1,10 +1,15 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-23 18:44:15
+Description: 
+'''
 from flask import Flask
-from .User import user
-from .CaseTemplateParse import case_parse 
-from .Project import project
 
+from . import User, CaseTemplateParse, Project
 
 def register_routes(app: Flask):
-    app.register_blueprint(user, url_prefix="/user/")
-    app.register_blueprint(case_parse, url_prefix="/case/parse/")
-    app.register_blueprint(project, url_prefix="/project/")
+    app.register_blueprint(User.bp, url_prefix="/user/")
+    app.register_blueprint(CaseTemplateParse.bp, url_prefix="/case/parse/")
+    app.register_blueprint(Project.bp, url_prefix="/project/")

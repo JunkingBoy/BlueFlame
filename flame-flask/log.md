@@ -1,12 +1,3 @@
-## 2024-06-20
-
-###  feature
-
-1. 讨论 home 页面需要的字段, 字段的交互和来源
-2. Excel 上传功能的设计和实现
-3. api 
-
-
 ## 需求返回的 api response json
 
 ### 项目
@@ -84,52 +75,7 @@ output: {
 	code: int
 	data: {}
 	msg: str
-} 
-
-#### 2. 查询用例
-
-```python
-url: /case/search
-input: {
-	project_id: int
-	case_type: enum(0: all, 1: func_case, 2: api_case, 3: ui_case)
 }
-output: {
-	code: int
-	data: {
-		func_case: [
-			{
-				case_id: int
-				case_name: str
-				case_descript: str
-				before_step: str
-				...
-			}, 
-			{
-				case_id: int
-				case_name: str
-				case_descript: str
-				before_step: str
-				...
-			}			 
-		], 
-		ui_case: [
-
-	 	], 
-		api_case: [
-
-	 	], 
-		automatic_case: [
-
-	 	]
-	}
-	msg: str
-} 
-```
-
-3. 
-
-
 
 TODO<2024-06-20, @xcx>  熟悉 flask, 代码模块化 
 
@@ -157,133 +103,6 @@ project_id: int fk
 state: int 待审核  待执行  已执行 已废弃 
 case_create_time: data timestamp with zone utc 
 case_update_time: data timestamp with zone utc
-
-### 3. func_case
-id : int pk
-case_name: str(256)
-case_descript: str(1024)
-before_step: str(1024)
-base_case_id: int fk case_base
-
-
-### 4. api_case
-id: int pk
-caseid: int 
-script: str(1024)  api 脚本
-
-
-
-
-### database design
-
-To record test cases in a database, you can design a table with the following columns:
-
-1. **Test Case ID**: A unique identifier for each test case.
-2. **Test Case Name**: A descriptive name for the test case.
-3. **Test Case Type**: A field to indicate the type of test case (e.g., functionality, UI).
-4. **Test Case Description**: A detailed description of the test case.
-5. **Test Steps**: The steps to execute the test case.
-6. **Expected Results**: The expected results of the test case.
-7. **Actual Results**: The actual results of the test case.
-8. **Status**: The status of the test case (e.g., pass, fail).
-9. **Assigned To**: The person responsible for executing the test case.
-10. **Created Date**: The date when the test case was created.
-11. **Last Updated Date**: The date when the test case was last updated.
-
-You can create additional columns based on your specific requirements. This table structure will allow you to store and manage different types of test cases in your database effectively.
-
-
-```python
-@app.route('/func_case', methods=['POST'])
-def create_func_case():
-	data = request.json
-	func_case = FuncCase(func_detail=data['func_detail'])
-	db.session.add(func_case)
-	db.session.commit()
-	return jsonify(func_case.to_dict()), 201
-
-@app.route('/func_case/<int:id>', methods=['GET'])
-def get_func_case(id):
-	func_case = FuncCase.query.get(id)
-	if func_case is None:
-		return jsonify({'message': 'FuncCase not found'}), 404
-	return jsonify(func_case.to_dict())
-
-@app.route('/func_case/<int:id>', methods=['PUT'])
-def update_func_case(id):
-	func_case = FuncCase.query.get(id)
-	if func_case is None:
-		return jsonify({'message': 'FuncCase not found'}), 404
-	data = request.json
-	func_case.func_detail = data['func_detail']
-	db.session.commit()
-	return jsonify(func_case.to_dict())
-
-@app.route('/func_case/<int:id>', methods=['DELETE'])
-def delete_func_case(id):
-	func_case = FuncCase.query.get(id)
-	if func_case is None:
-		return jsonify({'message': 'FuncCase not found'}), 404
-	db.session.delete(func_case)
-	db.session.commit()
-	return jsonify({'message': 'FuncCase deleted'})
-```
- 
- 
- 
-```python
-from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
-from sqlalchemy.orm import sessionmaker
-
-Base = declarative_base()
-
-class Case(Base):
-	__tablename__ = 'case'
-	id = Column(Integer, primary_key=True)
-	type = Column(String(50))
-	
-	__mapper_args__ = {
-		'polymorphic_identity':'case',
-		'polymorphic_on':type
-	}
-
-class FuncCase(Case):
-	__tablename__ = 'func_case'
-	id = Column(Integer, ForeignKey('case.id'), primary_key=True)
-	func_detail = Column(String(100))  # FuncCase特有的字段
-	
-	__mapper_args__ = {
-		'polymorphic_identity':'func_case',
-	}
-
-class ApiCase(Case):
-	__tablename__ = 'api_case'
-	id = Column(Integer, ForeignKey('case.id'), primary_key=True)
-	api_detail = Column(String(100))  # ApiCase特有的字段
-	
-	__mapper_args__ = {
-		'polymorphic_identity':'api_case',
-	}
-	
-```
-
-读取成字典
-```python
-# 确保已安装 pandas 和 openpyxl
-# 读取 Excel 文件
-try:
-    df = pd.read_excel('/Users/xcx/WorkSpaces/BlueFlame/flame-flask/static/func_case_template.xlsx', engine='openpyxl')
-    df = df.to_dict()
-    # 查看数据
-    for k, v in df.items():
-        print(type(k))
-        print(type(v))
-        print(k, v)
-        print('-'*80)
-except Exception as e:
-    print("Error occurred while reading Excel file:", str(e))
-```
 
 
 # 20240701
@@ -321,3 +140,351 @@ case_log
     user_id: xcx
     modify_time: 
 ```
+
+
+
+
+
+### plan 2024-07-05
+
+<!-- ------------------------------------------------------------------------- -->
+plan CRUD
+<!-- ------------------------------------------------------------------------- -->
+create_plan(POST):
+	input: {
+		project_id: int
+		plan_name: str
+		start_time: date
+		end_time: date
+		user_id: from jwt
+	}
+	output: {
+		"data": <plan_id: int> if success else <error_msg: str>
+	}
+	
+modify_plan(PUT):
+	input: {
+		plan_name: str
+		start_time: date
+		end_time: date
+	}
+	output: {
+		"msg": str
+	}
+
+delete_plan(DELETE):
+	input:  {
+		plan_id: int
+	}
+	output: {
+		"msg": str
+	}
+
+all_plan(GET):
+	input: {
+		user_id: from jwt
+		project_id: int
+	}
+	output: {
+		"data": [
+			{
+				"plan_id": int,
+				"plan_name": str,
+				"start_time": date,
+				"end_time": date,
+				"case_ids": list<int>,
+			}	
+			...
+		]
+	}
+
+<!-- ------------------------------------------------------------------------- -->
+about plan'case CRUD
+<!-- ------------------------------------------------------------------------- -->
+
+append_plan_case(POST):
+	i: {
+		plan_id: int
+		case_ids: list<id: int>
+	}
+	o: {
+		 "msg": str
+	}
+	
+delete_plan_case(DELETE):
+	i: {
+		plan_id: int
+		case_ids: list<id: int>
+	}
+	o: {
+		 "msg": str
+	}
+	
+
+modify_plan_case(PUT):
+	I: {
+		plan_id: int
+		case_ids: list<int>
+	}
+	o: {
+		"msg": str
+	}
+
+获取一个项目下的一个plan下的所有case
+get_plan_case(GET):
+	i: {
+		plan_id: int
+	}
+	o: {
+		"data": [
+			{
+				"plan_case_id": int,
+				"case_name": str,
+				"case_type": str,
+				"case_detail": str,
+			}
+			...
+		]
+	}
+
+
+
+
+
+
+
+-------------------------------------------------------------------------
+
+<!-- case CRUD  -->
+
+-------------------------------------------------------------------------
+
+creage_case(POST):
+	input: {
+		case_type: str
+		case_detail: json
+		user_id: from jwt
+		project_id: int
+		plan_id: int
+	}
+	output: {
+		
+	}
+	
+modify_case(PUT):
+	input: {
+		case_id: int
+		case_detail: json
+	}
+	output: {
+		"msg": str
+	}
+
+delete_case(DELETE):
+	input:  {
+		case_id: int
+	}
+	output: {
+		"msg": str
+	}
+
+all_case(GET):
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ------------------------------------------------------------------------- -->
+plan 相关的数据表设计
+<!-- ------------------------------------------------------------------------- -->
+
+<!-- done -->
+project表:
+	id: int
+	pid: int, 
+	project_name: str, 
+	project_desc: str,
+	is_init: bool, 
+	creator: str,
+	create_time: date, 
+	update_time: date
+
+project_plan表:
+
+
+plan表: 
+	id: int
+	pid: str
+	uid: str
+	plan_id: str # plan_name+uid进行hash
+	plan_name: str
+	plan_desc: str
+	cid_array: array<str> # case表的cid字段.唯一的值
+	start_time: date
+	end_time: date
+	create_time: date
+	update_time: date
+
+plan_case_stack表:
+	id: int
+	uid: str
+	cid: str # 初始的为paln表同步过来的case_ids下的内容后续新增为user_id+cid_array的长度+1进行hash                   #_tag_case_id_list
+	plan_id: str
+	case_type: str
+	case_detail: dict
+	create_time: date
+	update_time: date
+
+case表: # 一条一条记
+	id: int
+	pid: str	                # for_project
+	uid: str					# init_user
+	cid: str # user_id + 解析出来的用例数量从0开始自增
+	case_type: str                #enum{func_case, api_case}
+	case_detail: dict            #_tag_case_detail -> 源数据
+	case_row_hash: str # 参考gi
+	t这一块的设计,git是如何识别两次提交的不同的内容 -> 行hash
+	<!-- case_actual_outcome: str string(25) -->
+	create_time: date
+	update_time: date
+
+user表:
+	id: int
+	uid: str, 
+	phone: str
+	pwd: str
+	create_time: date, 
+	update_time: date
+
+project_user表:
+	id: int
+	pid: int
+	uid: str
+	update_time: date
+
+ 
+<!-- ------------------------------------------------------------------------- -->
+备注
+case_detail_tag:
+
+	func_case
+	{
+		"case_num": str,
+		"case_name": str,
+		"test_env": str,
+		"case_module": str,
+		"case_condition": str,
+		"case_step": str,
+		"case_expect": str,
+		"case_actual": str,
+		"create_time": date
+	},
+
+	api_case
+	{
+		"api_name": str,
+		"api_url": str,
+		"api_method": str,
+		"api_params": str,
+		"api_return": str,
+		"api_desc": str,
+	}
+	
+	
+_tag_case_id_list:
+	[case_id1, case_id2, ...]
+<!-- ------------------------------------------------------------------------- -->
+
+
+时间格式: 建议使用ISO 8601格式
+ISO 8601 格式的示例：
+```text
+仅日期：2024-07-01
+日期和时间（24小时制）：2024-07-01T12:00:00
+日期和时间（带时区）：2024-07-01T12:00:00+00:00
+
+```
+
+
+# 2024-07-16
+
+## 一个项目下的所有的 case 信息
+url: /project/case/info
+i: {
+	"project_id": int
+}
+o: {
+	"data": [
+		{
+			"case_id_by_user": str,
+			"case_name": str,
+			"case_type": str,
+			"case_detail": str,
+			"case_state": str,
+			"create_time": date,
+			"update_time": date,
+		}, 
+		...
+	]
+}
+
+## plan 创建
+url: /project/plan/create
+i: {
+	"project_id": str,
+	"plan_name": str,
+	"start_time": date,
+	"end_time": date,
+	"case_ids": list<case_id: str>
+}
+o: {
+	"data": plan_id: str,
+	"msg": str
+}
+logic:  
+	1. 创建 plan_id: str, 根据 user_id + plan_name, sha256
+
+
+## bug
+1. 上传解析 Excel, case_id_by_user: int, 实际需要 str, 出现类型错误
+2. excel 去除update_time
+3. excel create_time 不需要时间, 只需要日期,  datetime   date, 
+
+# 20240718
+
+## User重构
+
+### 表字段重构
+
+user表:
+	id: int
+	user_id: str -> phonehash生成
+	user_name: str -> 用户phone(如:用户18785452131) 
+	phone: str -> 账号,区别不同用户的核心
+	pwd: str
+	create_time: date, 
+	update_time: date
+
+#### 提供api
+
+- 注册api
+- 登录api
+- 修改api
+	- 可修改用户名、密码
+	- 原密码、修改密码、确认密码
+
+# 20240720
+
+### Case表重构
+
+Case的需求:
+1、首先.case是源数据.只针对project级别下的case进行修改的记录
+2、project下的case的级别类似master分支.在git当中master分支通过设置规则进行保护.在这里则直接把第一次提交的case作为master分支.
+3、git当中在规则条件下提交pr进行合并.这里通过创建plan.执行了plan以后提交pr进行合并.每一个plan类似一个commit.提交合并要记录plan_id作为commit的id

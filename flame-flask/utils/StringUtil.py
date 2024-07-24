@@ -1,3 +1,10 @@
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-21 14:28:03
+Description: 
+'''
 import hashlib
 import os
 import random
@@ -25,6 +32,7 @@ def secure_filename(filename: str) -> str:
     return safe_name
 
 
-def get_hash_as_int(key: str, len=6) -> int:
-    return int(hashlib.sha256(key.encode()).hexdigest()[:len], 16)
-
+def sha256_str(key: str, length=16) -> str:
+    hash_value = hashlib.sha256(key.encode()).hexdigest()
+    # 有些 key 太短, 需要补前缀零来达到 len
+    return hash_value[:length].zfill(length)

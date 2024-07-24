@@ -1,13 +1,12 @@
-# docker-compose.yml
-
 version: '3'
 services:
   web:
     build: .
     ports:
-      - "8000:8000"  # 将容器内部的 8000 端口映射到宿主机的 8000 端口
+      - "8000:8000"
     depends_on:
-      - postgres  # 如果有依赖的服务，需要在这里声明
+      postgres:
+        condition: service_healthy
     environment:
       - DB_DRIVER=postgresql
       - DB_USER=postgres
@@ -17,8 +16,14 @@ services:
       - DB_NAME=bf
     networks:
       - mynetwork
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres:
+    container_name: my_postgres_docker
     image: postgres:13
     environment:
       POSTGRES_USER: postgres
@@ -26,9 +31,19 @@ services:
       POSTGRES_DB: bf
     ports:
       - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - mynetwork
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   mynetwork:
     driver: bridge
+
+volumes:
+  postgres_data:
