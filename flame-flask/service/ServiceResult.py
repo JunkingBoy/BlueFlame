@@ -1,10 +1,3 @@
-'''
-Author: Lucifer
-Data: Do not edit
-LastEditors: Lucifer
-LastEditTime: 2024-07-19 16:40:24
-Description: 
-'''
 from typing import Any, Dict, Optional
 
 class ServiceResult:

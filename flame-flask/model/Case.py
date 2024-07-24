@@ -2,13 +2,14 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-23 17:41:22
+LastEditTime: 2024-07-24 18:41:09
 Description: 
 '''
-from enum import Enum, unique
 from . import db
+from enum import Enum, unique
 from datetime import datetime
 from sqlalchemy import JSON
+from typing import Optional, Dict, Any
 
 from utils import DateUtil
 
@@ -17,16 +18,24 @@ from utils import DateUtil
 class CaseState(Enum):
     WAITING = "待执行"
     PASS = "测试通过"
-    ERROR_BUT_NOT_VERIFY = "测试失败, 待确认"
-    ERROR_VERIFYED = "测试失败, 已确认"
+    ERROR_BUT_NOT_VERIFY = "测试失败(待确认)"
+    ERROR_VERIFYED = "测试失败(已确认)"
     UNKNOWN = "未知状态"
     # 添加其他状态...
 
+    @staticmethod
+    def get_state(k: str) -> str:
+        return CaseState(k).value
+    
+    @classmethod
+    def from_str_get_state(cls: type['CaseState'], excel_str: str) -> Optional['CaseState']:
+        value_to_member: Dict[str, 'CaseState'] = { member.value: member for member in cls }
+        return value_to_member.get(excel_str)
 
 class Case(db.Model):
     __tablename__ = 'case'
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    cid: str = db.Column(db.String(17), unique=True, nullable=False)
+    cid: str = db.Column(db.String(18), unique=True, nullable=False)
     pid: str = db.Column(db.String(17), unique=False, nullable=False)
     uid: str = db.Column(db.String(80), unique=False, nullable=False)
     case_type: str = db.Column(db.String(20), unique=False, nullable=False)
@@ -40,10 +49,11 @@ class Case(db.Model):
                         default=DateUtil.now,
                         onupdate=DateUtil.now)
 
-    def __init__(self, init_data, case_type: str, project_id: str, user_id: str, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
+    def __init__(self, init_data, cid: str, case_type: str, project_id: str, user_id: str, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
         super().__init__()
         self.pid = project_id
         self.uid = user_id
+        self.cid = cid
         self.case_type = case_type
         self.case_detail = init_data
         self.case_row_hash = row_hash

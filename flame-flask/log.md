@@ -113,19 +113,6 @@ state: int 待审核  待执行  已执行 已废弃
 case_create_time: data timestamp with zone utc 
 case_update_time: data timestamp with zone utc
 
-### 3. func_case
-id : int pk
-case_name: str(256)
-case_descript: str(1024)
-before_step: str(1024)
-base_case_id: int fk case_base
-
-
-### 4. api_case
-id: int pk
-caseid: int 
-script: str(1024)  api 脚本
-
 
 # 20240701
 ### 确定事项
@@ -330,7 +317,7 @@ plan 相关的数据表设计
 <!-- done -->
 project表:
 	id: int
-	project_id: int, 
+	pid: int, 
 	project_name: str, 
 	project_desc: str,
 	is_init: bool, 
@@ -343,35 +330,43 @@ project_plan表:
 
 plan表: 
 	id: int
-	project_id: int
+	pid: str
+	uid: str
+	plan_id: str # plan_name+uid进行hash
 	plan_name: str
+	plan_desc: str
+	cid_array: array<str> # case表的cid字段.唯一的值
 	start_time: date
 	end_time: date
-	user_id: str
 	create_time: date
 	update_time: date
 
-plan_case表:
+plan_case_stack表:
 	id: int
-	plan_id: int
-	case_id: int json                   #_tag_case_id_list
+	uid: str
+	cid: str # 初始的为paln表同步过来的case_ids下的内容后续新增为user_id+cid_array的长度+1进行hash                   #_tag_case_id_list
+	plan_id: str
+	case_type: str
+	case_detail: dict
 	create_time: date
 	update_time: date
 
-case表:
+case表: # 一条一条记
 	id: int
-	id_by_user: str    		# 这个字段记录为一个hash值 -> 在初始化case的时候生成字段 -> 先id后id_by_user
+	pid: str	                # for_project
+	uid: str					# init_user
+	cid: str # user_id + 解析出来的用例数量从0开始自增
 	case_type: str                #enum{func_case, api_case}
-	case_detail: json             #_tag_case_detail -> 源数据
-	case_hash: str # 参考git这一块的设计,git是如何识别两次提交的不同的内容
-	user_id: str					# init_user
-	project_id: int                # for_project
+	case_detail: dict            #_tag_case_detail -> 源数据
+	case_row_hash: str # 参考gi
+	t这一块的设计,git是如何识别两次提交的不同的内容 -> 行hash
+	<!-- case_actual_outcome: str string(25) -->
 	create_time: date
 	update_time: date
 
 user表:
 	id: int
-	user_id: str, 
+	uid: str, 
 	phone: str
 	pwd: str
 	create_time: date, 
@@ -379,8 +374,8 @@ user表:
 
 project_user表:
 	id: int
-	project_id: int
-	user_id: str
+	pid: int
+	uid: str
 	update_time: date
 
  

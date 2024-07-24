@@ -24,12 +24,12 @@ def create_app() -> Flask:
     # 根据Docker环境变量设置数据库URI
     if os.getenv('DOCKER_ENV') == 'true':
         app.config['SQLALCHEMY_DATABASE_URI'] = URL(
-            drivername=os.getenv("DB_DRIVER"),
+            drivername=os.getenv("DB_DRIVER"), # type: ignore
             username=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             host=os.getenv("DB_HOST"),
             database=os.getenv("DB_NAME"),
-            port=int(os.getenv("DB_PORT")),
+            port=int(os.getenv("DB_PORT")), # type: ignore
             query=immutabledict({"options": "-c TimeZone=Asia/Shanghai"})
         )
     else:
@@ -76,7 +76,8 @@ def get_value_from_yaml(key) -> Any:
 
 def log() -> Handler:
     handler: Handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
+    # handler.setLevel(logging.DEBUG)
+    handler.setLevel(logging.INFO)
     formatter: object = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )

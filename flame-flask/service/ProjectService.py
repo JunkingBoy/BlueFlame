@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-23 20:52:26
+LastEditTime: 2024-07-24 21:31:44
 Description: 
 '''
 from model import db
@@ -43,15 +43,15 @@ class ProjectService:
             if project_number >= 5:
                 return ServiceResult.fail(f"can not create more project")
 
+            project_dict = project.model_dump()
+            project_dict['user_id'] = user_id
+            p = Project(**project_dict)
             existed = db.session.query(Project).filter(
                 Project.pid == p.pid # type: ignore
             ).first()
             if existed:
                 return ServiceResult.fail(f"there is a same project")
             else:
-                project_dict = project.model_dump()
-                project_dict['user_id'] = user_id
-                p = Project(**project_dict)
                 pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
                 db.session.add(p)
                 db.session.add(pu)
@@ -59,7 +59,7 @@ class ProjectService:
                 return ServiceResult.success(f"create project success")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"create project fail {e}")
+            current_app.logger.error(f"create project fail {e}", exc_info=True)
             # TODO<2024-07-06, @xcx> 最好有一个错误的表, 可以查询错误类型和对应的报错信息, 不要把程序的错误报出去给用户
             return ServiceResult.fail(f"create fail: {str(e)}")
 
@@ -83,14 +83,16 @@ class ProjectService:
                     ProjectUser.pid == project_id).delete(synchronize_session=False) # type: ignore
                 # db.session.query(Project).filter(
                 #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
-                temp_project.project_id = new_project_id # type: ignore
+                db.session.query(Case).filter(
+                    Case.pid == project_id).update({"pid": new_project_id}) # type: ignore
+                temp_project.pid = new_project_id # type: ignore
                 temp_project.is_delete = True # type: ignore
                 temp_project.update_time = now() # type: ignore
                 db.session.commit()
                 return ServiceResult.success(f"delete project success")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.info(f"delete project fail: {str(e)}")
+            current_app.logger.info(f"delete project fail: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"delete project fail: {str(e)}")
 
     @staticmethod
@@ -114,7 +116,7 @@ class ProjectService:
             return ServiceResult.success(f"modify project success")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.info(f"modify project fail: {str(e)}")
+            current_app.logger.info(f"modify project fail: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"moify fail: {str(e)}")
 
 #     @staticmethod
@@ -219,9 +221,9 @@ class ProjectService:
 
             return ServiceResult.success([project.model_dump() for project in project_list]) # type: ignore
         except Exception as e:
-            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}")
+            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"Failed to get projects: {str(e)}") 
-        
+
     @staticmethod
     def get_all_project_by_user_id(user_id: str) -> ServiceResult:
         projects: List[Project] = []
@@ -259,7 +261,7 @@ class ProjectService:
             
             return ServiceResult.success([project.model_dump() for project in project_list]) # type: ignore
         except Exception as e:
-            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}")
+            current_app.logger.error(f"Failed to get projects for user {user_id}: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"Failed to get projects: {str(e)}")
         pass
         
