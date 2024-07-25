@@ -14,7 +14,7 @@ class User(db.Model):
     __tablename__ = 'user'
     # 这里定义表字段(元数据)
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    uid: str = db.Column(db.String(17), unique=True, nullable=False)
+    uid: str = db.Column(db.String(16), unique=True, nullable=False)
     user_name: str = db.Column(db.String(16), unique=False, nullable=False)
     phone: str = db.Column(db.String(12), unique=True, nullable=False)
     password: str = db.Column(db.String(120), unique=False, nullable=False)

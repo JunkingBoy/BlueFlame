@@ -35,10 +35,10 @@ class CaseState(Enum):
 class Case(db.Model):
     __tablename__ = 'case'
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    cid: str = db.Column(db.String(18), unique=True, nullable=False)
-    pid: str = db.Column(db.String(17), unique=False, nullable=False)
-    uid: str = db.Column(db.String(80), unique=False, nullable=False)
-    case_type: str = db.Column(db.String(20), unique=False, nullable=False)
+    cid: str = db.Column(db.String(16), unique=True, nullable=False)
+    pid: str = db.Column(db.String(16), unique=False, nullable=False)
+    uid: str = db.Column(db.String(16), unique=False, nullable=False)
+    case_type: int = db.Column(db.Integer, unique=False, nullable=False)
     case_detail: JSON = db.Column(db.JSON, unique=False, nullable=False)
     case_row_hash: str = db.Column(db.String(80), unique=False, nullable=False)
     create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
@@ -49,13 +49,13 @@ class Case(db.Model):
                         default=DateUtil.now,
                         onupdate=DateUtil.now)
 
-    def __init__(self, init_data, cid: str, case_type: str, project_id: str, user_id: str, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
+    def __init__(self, cid: str, project_id: str, user_id: str, case_type: int, data: JSON, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
         super().__init__()
+        self.cid = cid
         self.pid = project_id
         self.uid = user_id
-        self.cid = cid
         self.case_type = case_type
-        self.case_detail = init_data
+        self.case_detail = data
         self.case_row_hash = row_hash
 
     def __repr__(self):

@@ -489,5 +489,6 @@ user表:
 2、Plan表新增字段
 	1、区分管理新增用例和从Project下拷贝的用例
 3、Project持有者注销用户以后删除整条数据链
-4、新增case_merge逻辑
-5、新增上传文件的dto校验
+4、新增上传文件的dto校验
+5、重构Case相关api
+6、新增Plan表入库逻辑

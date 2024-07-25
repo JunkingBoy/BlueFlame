@@ -2,13 +2,13 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-25 13:31:10
+LastEditTime: 2024-07-26 01:41:07
 Description: 
 '''
 import hashlib
 import random
 import string
-from typing import Optional
+from typing import Optional, List
 from flask import current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_jwt_extended import create_access_token
@@ -52,7 +52,7 @@ class UserService:
 
             hashed_pwd = hashlib.sha256(user_dto.password.encode()).hexdigest()
 
-            user = User(user_id=sha256_str(user_dto.phone), user_name=user_name, phone=user_dto.phone, password=hashed_pwd)
+            user = User(user_id=sha256_str(f"{user_dto.phone}{now()}"), user_name=user_name, phone=user_dto.phone, password=hashed_pwd)
             db.session.add(user)
             db.session.commit()
             return ServiceResult.success(f"User created successfully")
@@ -97,14 +97,12 @@ class UserService:
     def delete(user_dto: UserLogoutDTO, user_id: str) -> ServiceResult:
         user: Optional[User] = None
         temp_password: str = ""
-        temp_project_id: str = ""
-        new_user_id: str = ""
         random_phone: str = ""
 
         try:
             user = db.session.query(User).filter(
                 User.uid == user_id, # type: ignore
-                User.is_delete == False # type: ignore
+                User.is_delete.is_(False) # type: ignore
             ).first()
 
             if user is None:
@@ -115,8 +113,6 @@ class UserService:
             if str(user.password) != temp_password:
                 return ServiceResult.fail(f"Password not match")
             else:
-                new_user_id = sha256_str(str(f"{now()}{user_id}"), length=17)
-                temp_project_id = sha256_str(str(f"{now()}{user_id}"), length=17)
                 random_phone = ''.join(random.choices(string.digits, k=12))
                 db.session.query(Case).filter(
                     Case.uid == user_id # type: ignore
@@ -127,11 +123,9 @@ class UserService:
                 db.session.query(Project).filter(
                     Project.creator == user_id, # type: ignore
                     Project.is_delete == False # type: ignore
-                ).update({'pid': temp_project_id, 'is_delete': True})
-                user.uid = new_user_id # type: ignore
+                ).update({'is_delete': True})
                 user.phone = random_phone # type: ignore
                 user.is_delete = True # type: ignore
-                user.update_time = now() # type: ignore
                 db.session.commit()
                 return ServiceResult.success(f"user delete successful")
         except Exception as e:
