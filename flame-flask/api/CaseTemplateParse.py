@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 22:05:03
+LastEditTime: 2024-07-25 14:13:23
 Description: 
 '''
 from service.CaseService import CaseService
@@ -101,7 +101,10 @@ def upload_file():
     #     out_file.flush()
         # out_file.write(str(R.ok(case_template.get_data())))
 
-    return R.ok(result)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 @bp.route('/all', methods=['GET'])

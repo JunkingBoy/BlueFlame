@@ -133,11 +133,11 @@ class UserService:
                 user.is_delete = True # type: ignore
                 user.update_time = now() # type: ignore
                 db.session.commit()
-                return ServiceResult.success(f"logout successful")
+                return ServiceResult.success(f"user delete successful")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"logout fail {e}")
-            return ServiceResult.fail(f"logout fail")
+            current_app.logger.error(f"user delete fail {e}")
+            return ServiceResult.fail(f"user delete fail")
 
     @staticmethod
     def modify_password(user_dto: UserModifyPasswordDTO, user_id: str) -> ServiceResult:

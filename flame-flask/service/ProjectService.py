@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 21:31:44
+LastEditTime: 2024-07-25 14:04:13
 Description: 
 '''
 from model import db
@@ -80,12 +80,12 @@ class ProjectService:
                 return ServiceResult.fail(f"can not find project or this project is not for you")
             else:
                 new_project_id = sha256_str(str(f"{now()}{user_id}"), length=17)
+                db.session.query(Case).filter(
+                    Case.pid == project_id).update({"pid": new_project_id}) # type: ignore
                 db.session.query(ProjectUser).filter(
                     ProjectUser.pid == project_id).delete(synchronize_session=False) # type: ignore
                 # db.session.query(Project).filter(
                 #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
-                db.session.query(Case).filter(
-                    Case.pid == project_id).update({"pid": new_project_id}) # type: ignore
                 temp_project.pid = new_project_id # type: ignore
                 temp_project.is_delete = True # type: ignore
                 temp_project.update_time = now() # type: ignore
