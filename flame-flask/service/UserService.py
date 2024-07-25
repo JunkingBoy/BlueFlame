@@ -41,8 +41,8 @@ class UserService:
 
         # 检查电话号码是否已存在
         existing_user = db.session.query(User).filter(
-            User.phone == user_dto.phone, # type: ignore
-            User.is_delete == False # type: ignore
+            User.phone.is_(user_dto.phone), # type: ignore
+            User.is_delete.is_(False) # type: ignore
         ).first()
 
         if existing_user:
@@ -65,17 +65,16 @@ class UserService:
 
         try:
             existing_user = db.session.query(User).filter(
-                User.phone == user_dto.phone, # type: ignore
-                User.is_delete == False # type: ignore
+                User.phone.is_(user_dto.phone), # type: ignore
+                User.is_delete.is_(False) # type: ignore
             ).first()
 
             if not existing_user:
                 return ServiceResult.fail(f"Phone number not registered")
 
-            #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
             user = db.session.query(User).filter(
-                User.phone == user_dto.phone, # type: ignore
-                User.is_delete == False # type: ignore
+                User.phone.is_(user_dto.phone), # type: ignore
+                User.is_delete.is_(False) # type: ignore
             ).first()
 
             if user is None:
@@ -87,7 +86,6 @@ class UserService:
                 return ServiceResult.fail(f"Password not match")
             else:
                 token = create_access_token(identity=user.uid)
-                # 返回 Bearer token
                 return ServiceResult.success({"token": token, "token_type": "Bearer"})
         except Exception as e:
             current_app.logger.error(f"login fail {e}")
@@ -101,7 +99,7 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id, # type: ignore
+                User.uid.is_(user_id), # type: ignore
                 User.is_delete.is_(False) # type: ignore
             ).first()
 
@@ -115,14 +113,14 @@ class UserService:
             else:
                 random_phone = ''.join(random.choices(string.digits, k=12))
                 db.session.query(Case).filter(
-                    Case.uid == user_id # type: ignore
+                    Case.uid.is_(user_id) # type: ignore
                 ).delete(synchronize_session=False)
                 db.session.query(ProjectUser).filter(
-                    ProjectUser.uid == user_id # type: ignore
+                    ProjectUser.uid.is_(user_id) # type: ignore
                 ).delete(synchronize_session=False)
                 db.session.query(Project).filter(
-                    Project.creator == user_id, # type: ignore
-                    Project.is_delete == False # type: ignore
+                    Project.creator.is_(user_id), # type: ignore
+                    Project.is_delete.is_(False) # type: ignore
                 ).update({'is_delete': True})
                 user.phone = random_phone # type: ignore
                 user.is_delete = True # type: ignore
@@ -141,8 +139,8 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id, # type: ignore
-                User.is_delete == False # type: ignore
+                User.uid.is_(user_id), # type: ignore
+                User.is_delete.is_(False) # type: ignore
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
@@ -168,8 +166,8 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id, # type: ignore
-                User.is_delete == False # type: ignore
+                User.uid.is_(user_id), # type: ignore
+                User.is_delete.is_(False) # type: ignore
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")

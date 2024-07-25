@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-26 02:12:48
+LastEditTime: 2024-07-26 02:59:11
 Description: 
 '''
 from model import db
@@ -36,8 +36,8 @@ class ProjectService:
 
         try:
             project_number = db.session.query(func.count(Project.pid)).filter( # type: ignore
-                Project.creator == user_id, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.creator.is_(user_id), # type: ignore
+                Project.is_delete.is_(False) # type: ignore
             ).scalar()
 
             if project_number >= 5:
@@ -47,8 +47,8 @@ class ProjectService:
             project_dict['user_id'] = user_id
             p = Project(project_id=sha256_str(f"{project.project_name}{user_id}{now()}"), **project_dict)
             existed = db.session.query(Project).filter(
-                Project.pid == p.pid, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid.is_(p.pid), # type: ignore
+                Project.is_delete.is_(False) # type: ignore
             ).first()
             if existed:
                 return ServiceResult.fail(f"there is a same project")
@@ -70,19 +70,19 @@ class ProjectService:
 
         try:
             temp_project = db.session.query(Project).filter(
-                Project.pid == project_id, # type: ignore
-                Project.creator == user_id, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid,is_(project_id), # type: ignore
+                Project.creator.is_(user_id), # type: ignore
+                Project.is_delete.is_(False) # type: ignore
             ).first()
 
             if temp_project is None:
                 return ServiceResult.fail(f"can not find project or this project is not for you")
             else:
                 db.session.query(Case).filter(
-                    Case.pid == project_id # type: ignore
+                    Case.pid.is_(project_id) # type: ignore
                 ).delete(synchronize_session=False) # type: ignore
                 db.session.query(ProjectUser).filter(
-                    ProjectUser.pid == project_id # type: ignore
+                    ProjectUser.pid.is_(project_id) # type: ignore
                 ).delete(synchronize_session=False) # type: ignore
                 # db.session.query(Project).filter(
                 #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
@@ -100,9 +100,9 @@ class ProjectService:
 
         try:
             temp_project = db.session.query(Project).filter(
-                Project.pid == project.project_id, # type: ignore
-                Project.creator == user_id, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid.is_(project.project_id), # type: ignore
+                Project.creator.is_(user_id), # type: ignore
+                Project.is_delete.is_(False) # type: ignore
             ).first()
 
             if not temp_project:
@@ -181,9 +181,8 @@ class ProjectService:
     #         return ServiceResult.fail(f"获取项目失败: {str(e)}")
 
     @staticmethod
-    def get_project_creator_by_user_id(user_id: str) -> ServiceResult:
+    def get_project_by_creator(user_id: str) -> ServiceResult:
         projects: List[Project] = []
-        project_ids: List[str] = []
         project_list: List[ProjectDTO] = []
         project_dto: ProjectDTO
         '''
@@ -193,19 +192,10 @@ class ProjectService:
         '''
 
         try:
-            # 获取用户创建的项目的id
-            project_ids = [
-                pu.pid
-                for pu in db.session.query(ProjectUser).filter(ProjectUser.user_id == user_id).all() # type: ignore
-            ]
-
-            if not project_ids:
-                return ServiceResult.fail(f"No projects found for this user")
-
             # 获取项目信息
             projects = db.session.query(Project).filter(
-                Project.pid.in_(project_ids), # type: ignore
-                Project.creator == user_id, # type: ignore
+                Project.creator,is_(user_id), # type: ignore
+                Project.is_delete.is_(False) # type: ignore
             ).all()
 
             for project in projects:
