@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-25 12:54:55
+LastEditTime: 2024-07-25 13:29:26
 Description: 
 '''
 from . import db
@@ -14,7 +14,7 @@ from utils import DateUtil
 class Project(db.Model):
     __tablename__ = 'project'
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    pid: str = db.Column(db.String(17), unique=False, nullable=False)
+    pid: str = db.Column(db.String(17), unique=True, nullable=False)
     project_name: Optional[str] = db.Column(db.String(200), unique=False, nullable=False)
     project_desc: Optional[str] = db.Column(db.Text, unique=False, nullable=True)
     is_init: bool = db.Column(db.Boolean, unique=False, nullable=False, default=False)
