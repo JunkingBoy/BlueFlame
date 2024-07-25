@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-25 14:04:13
+LastEditTime: 2024-07-26 02:12:48
 Description: 
 '''
 from model import db
@@ -36,8 +36,8 @@ class ProjectService:
 
         try:
             project_number = db.session.query(func.count(Project.pid)).filter( # type: ignore
-                Project.creator == user_id,
-                Project.is_delete == False
+                Project.creator == user_id, # type: ignore
+                Project.is_delete == False # type: ignore
             ).scalar()
 
             if project_number >= 5:
@@ -45,7 +45,7 @@ class ProjectService:
 
             project_dict = project.model_dump()
             project_dict['user_id'] = user_id
-            p = Project(**project_dict)
+            p = Project(project_id=sha256_str(f"{project.project_name}{user_id}{now()}"), **project_dict)
             existed = db.session.query(Project).filter(
                 Project.pid == p.pid, # type: ignore
                 Project.is_delete == False # type: ignore
@@ -53,7 +53,7 @@ class ProjectService:
             if existed:
                 return ServiceResult.fail(f"there is a same project")
             else:
-                pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
+                pu = ProjectUser(project_id=sha256_str(f"{project.project_name}{user_id}{now()}"), user_id=user_id) # type: ignore
                 db.session.add(p)
                 db.session.add(pu)
                 db.session.commit()
@@ -67,7 +67,6 @@ class ProjectService:
     @staticmethod
     def delete(project_id: str, user_id: str) -> ServiceResult:
         temp_project: Optional[Project] = None
-        new_project_id: str = ""
 
         try:
             temp_project = db.session.query(Project).filter(
@@ -79,16 +78,15 @@ class ProjectService:
             if temp_project is None:
                 return ServiceResult.fail(f"can not find project or this project is not for you")
             else:
-                new_project_id = sha256_str(str(f"{now()}{user_id}"), length=17)
                 db.session.query(Case).filter(
-                    Case.pid == project_id).update({"pid": new_project_id}) # type: ignore
+                    Case.pid == project_id # type: ignore
+                ).delete(synchronize_session=False) # type: ignore
                 db.session.query(ProjectUser).filter(
-                    ProjectUser.pid == project_id).delete(synchronize_session=False) # type: ignore
+                    ProjectUser.pid == project_id # type: ignore
+                ).delete(synchronize_session=False) # type: ignore
                 # db.session.query(Project).filter(
                 #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
-                temp_project.pid = new_project_id # type: ignore
                 temp_project.is_delete = True # type: ignore
-                temp_project.update_time = now() # type: ignore
                 db.session.commit()
                 return ServiceResult.success(f"delete project success")
         except Exception as e:

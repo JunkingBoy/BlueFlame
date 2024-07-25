@@ -7,6 +7,8 @@ from model.Project import Project, ProjectUser
 from model.Case import Case
 from service.ServiceResult import ServiceResult
 from utils.CaseDb import CaseDbTemplate
+from utils.DateUtil import now
+from utils.StringUtil import sha256_str
 
 # def data_to_dict_list(data: List[Case]) -> List[Dict[str, Any]]:
 #     ret_data: List[Dict[str, Any]] = []
@@ -29,7 +31,6 @@ class CaseService:
         uid: str = data[0].uid
         type: int = data[0].case_type
         inser_data: Case
-        time: int = 0
 
         if uid != user_id:
             return ServiceResult.fail(f"you are not those case owner")
@@ -46,8 +47,7 @@ class CaseService:
                 return ServiceResult.fail(f"can not found this project")
             else:
                 for case in data:
-                    inser_data = Case(project_id=pid, user_id=uid, cid=f"{user_id}{time}", case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
-                    time += 1
+                    inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=uid, case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
                     db.session.add(inser_data)
                 project.is_init = True
                 db.session.commit()
