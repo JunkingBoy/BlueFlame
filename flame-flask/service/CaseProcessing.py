@@ -9,7 +9,7 @@ from utils.StringUtil import sha256_str
 '''
 将数据打包处理成可入库的形式的数组
 '''
-def parse_process(data: List[Dict[str, Any]], type: str, pid: str, uid: str) -> List[CaseDbTemplate]:
+def parse_process(data: List[Dict[str, Any]], type: int, pid: str, uid: str) -> List[CaseDbTemplate]:
     '''
     将data、type、pid、uid打包成CaseDbTemplate
     '''

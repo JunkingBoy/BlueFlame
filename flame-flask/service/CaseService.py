@@ -27,7 +27,7 @@ class CaseService:
         project: Optional[Project] = None
         pid: str = data[0].pid
         uid: str = data[0].uid
-        type: str = data[0].case_type
+        type: int = data[0].case_type
         inser_data: Case
         time: int = 0
 
@@ -46,7 +46,7 @@ class CaseService:
                 return ServiceResult.fail(f"can not found this project")
             else:
                 for case in data:
-                    inser_data = Case(init_data=case.case_detail, cid=f"{user_id}{time}" , case_type=type, project_id=pid, user_id=uid, row_hash=case.case_row_hash)
+                    inser_data = Case(project_id=pid, user_id=uid, cid=f"{user_id}{time}", case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
                     time += 1
                     db.session.add(inser_data)
                 project.is_init = True
@@ -56,7 +56,17 @@ class CaseService:
             db.session.rollback()
             current_app.logger.error(f"case insert failed: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"case upload failed")
-    
+
+    # @staticmethod
+    # def create_merge(data: List[CaseDbTemplate], project_id: str, user_id: str) -> ServiceResult:
+    #     '''
+    #     提交的用户是项目创建者
+    #     case_type: 0: func_case, 1: api_case -> 确保cid的绝对唯一 -> uid+file+now进行hash结果在进行索引的新增
+    #     merge以后的cid是uid+plan_id+now进行hash然后结果进行索引的新增
+    #     新增case_log记录case的相关变更 -> 对于case_log只有add的操作 -> 对那一次的merge操作进行记录 -> 提供commit_hash字段.那一次的所有db的操作都打上该commit_hash
+    #     '''
+
+
     @staticmethod
     def get_all_case(project_id: str, user_id: str) -> ServiceResult:
         '''
