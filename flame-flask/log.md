@@ -480,11 +480,14 @@ user表:
 	- 可修改用户名、密码
 	- 原密码、修改密码、确认密码
 
-# 20240720
+# 20240725
 
-### Case表重构
+### 今日需求
 
-Case的需求:
-1、首先.case是源数据.只针对project级别下的case进行修改的记录
-2、project下的case的级别类似master分支.在git当中master分支通过设置规则进行保护.在这里则直接把第一次提交的case作为master分支.
-3、git当中在规则条件下提交pr进行合并.这里通过创建plan.执行了plan以后提交pr进行合并.每一个plan类似一个commit.提交合并要记录plan_id作为commit的id
+1、User表注销用户的重构
+	1、主要是注销用户以后什么数据需要更改 -> Project_User表需要删除该用户所有关联的项目
+2、Plan表新增字段
+	1、区分管理新增用例和从Project下拷贝的用例
+3、Project持有者注销用户以后删除整条数据链
+4、新增case_merge逻辑
+5、新增上传文件的dto校验

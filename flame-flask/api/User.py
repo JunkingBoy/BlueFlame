@@ -47,9 +47,9 @@ def user_login() -> Response:
     else:
         return R.err(result.content)
 
-@bp.route("/logout", methods=["DELETE"])
+@bp.route("/delete", methods=["DELETE"])
 @jwt_required()
-def user_logout() -> Response:
+def user_delete() -> Response:
     from dto.receive.UserDto import UserLogoutDTO
     from service.UserService import UserService
 
@@ -58,7 +58,7 @@ def user_logout() -> Response:
     except ValidationError as e:
         return R.err(UserLogoutDTO.custom_errors(e))
 
-    result: ServiceResult = UserService.logout(user, get_user_id())
+    result: ServiceResult = UserService.delete(user, get_user_id())
     if result.ok:
         return R.ok(result.content)
     else:

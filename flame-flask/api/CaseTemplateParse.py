@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 22:05:03
+LastEditTime: 2024-07-25 14:13:23
 Description: 
 '''
 from service.CaseService import CaseService
@@ -83,7 +83,7 @@ def upload_file():
     # TODO<2024-06-26, @xcx> 不插入数据库, 只序列化数据, 查询全部用例的 api 展示不做,
     data: List[CaseDbTemplate] = parse_process(case_template, type=case_type, pid=project_id, uid=user_id)
     print(f'case_template.get_data(): {data[0].pid, data[0].uid, data[0].case_type, data[0].case_detail, data[0].case_row_hash}')
-    result = CaseService.create(data, get_user_id())
+    result = CaseService.create_init(data, get_user_id())
 
     # folder = f'tmp_response/{datetime.now().strftime("%Y-%m-%d")}'
     # if not os.path.exists(folder):
@@ -101,7 +101,10 @@ def upload_file():
     #     out_file.flush()
         # out_file.write(str(R.ok(case_template.get_data())))
 
-    return R.ok(result)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
 
 @bp.route('/all', methods=['GET'])
