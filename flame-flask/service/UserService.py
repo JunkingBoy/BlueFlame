@@ -2,17 +2,18 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-26 01:41:07
+LastEditTime: 2024-07-26 04:02:44
 Description: 
 '''
 import hashlib
 import random
 import string
-from typing import Optional, List
+from typing import Optional
 from flask import current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_jwt_extended import create_access_token
 from model import db
+from sqlalchemy import bindparam
 
 from .ServiceResult import ServiceResult
 
@@ -41,8 +42,11 @@ class UserService:
 
         # 检查电话号码是否已存在
         existing_user = db.session.query(User).filter(
-            User.phone.is_(user_dto.phone), # type: ignore
-            User.is_delete.is_(False) # type: ignore
+            User.phone == bindparam('phone_param'), # type: ignore
+            User.is_delete == bindparam('is_delete_param') # type: ignore
+        ).params(
+            phone_param=user_dto.phone,
+            is_delete_param=False
         ).first()
 
         if existing_user:
@@ -65,16 +69,22 @@ class UserService:
 
         try:
             existing_user = db.session.query(User).filter(
-                User.phone.is_(user_dto.phone), # type: ignore
-                User.is_delete.is_(False) # type: ignore
+                User.phone == bindparam('phone_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                phone_param=user_dto.phone,
+                is_delete_param=False
             ).first()
 
             if not existing_user:
                 return ServiceResult.fail(f"Phone number not registered")
 
             user = db.session.query(User).filter(
-                User.phone.is_(user_dto.phone), # type: ignore
-                User.is_delete.is_(False) # type: ignore
+                User.phone == bindparam('phone_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                phone_param=user_dto.phone,
+                is_delete_param=False
             ).first()
 
             if user is None:
@@ -99,8 +109,11 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid.is_(user_id), # type: ignore
-                User.is_delete.is_(False) # type: ignore
+                User.uid == bindparam('uid_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                uid_param=user_id,
+                is_delete_param=False
             ).first()
 
             if user is None:
@@ -113,14 +126,21 @@ class UserService:
             else:
                 random_phone = ''.join(random.choices(string.digits, k=12))
                 db.session.query(Case).filter(
-                    Case.uid.is_(user_id) # type: ignore
+                    Case.uid == bindparam('uid_param') # type: ignore
+                ).params(
+                    uid_param=user_id
                 ).delete(synchronize_session=False)
                 db.session.query(ProjectUser).filter(
-                    ProjectUser.uid.is_(user_id) # type: ignore
+                    ProjectUser.uid == bindparam('uid_param') # type: ignore
+                ).params(
+                    uid_param=user_id
                 ).delete(synchronize_session=False)
                 db.session.query(Project).filter(
-                    Project.creator.is_(user_id), # type: ignore
-                    Project.is_delete.is_(False) # type: ignore
+                    Project.creator == bindparam('creator_param'), # type: ignore
+                    Project.is_delete == bindparam('is_delete_param') # type: ignore
+                ).params(
+                    creator_param=user_id,
+                    is_delete_param=False
                 ).update({'is_delete': True})
                 user.phone = random_phone # type: ignore
                 user.is_delete = True # type: ignore
@@ -139,8 +159,11 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid.is_(user_id), # type: ignore
-                User.is_delete.is_(False) # type: ignore
+                User.uid == bindparam('uid_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                uid_param=user_id,
+                is_delete_param=False
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
@@ -166,8 +189,11 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid.is_(user_id), # type: ignore
-                User.is_delete.is_(False) # type: ignore
+                User.uid == bindparam('uid_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                uid_param=user_id,
+                is_delete_param=False
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
@@ -182,7 +208,7 @@ class UserService:
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"modify name fail {e}")
-            return ServiceResult.fail("modify name fail")
+            return ServiceResult.fail(f"modify name fail")
 
 @jwt_required()
 def get_user_id() -> str:
