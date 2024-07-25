@@ -23,7 +23,7 @@ from utils.CaseDb import CaseDbTemplate
 
 class CaseService:
     @staticmethod
-    def create(data: List[CaseDbTemplate], user_id: str) -> ServiceResult:
+    def create_init(data: List[CaseDbTemplate], user_id: str) -> ServiceResult:
         project: Optional[Project] = None
         pid: str = data[0].pid
         uid: str = data[0].uid
@@ -93,7 +93,6 @@ class CaseService:
                 ).filter(
                     Case.pid == project_id, # type: ignore
                 ).all()
-                print(data)
                 return ServiceResult.success(f"get case info success")
         except Exception as e:
             current_app.logger.error(f"case get all failed: {str(e)}", exc_info=True)

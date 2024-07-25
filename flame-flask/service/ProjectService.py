@@ -47,7 +47,8 @@ class ProjectService:
             project_dict['user_id'] = user_id
             p = Project(**project_dict)
             existed = db.session.query(Project).filter(
-                Project.pid == p.pid # type: ignore
+                Project.pid == p.pid, # type: ignore
+                Project.is_delete == False # type: ignore
             ).first()
             if existed:
                 return ServiceResult.fail(f"there is a same project")
