@@ -83,7 +83,7 @@ def modify_project() -> Response:
 def get_projects_by_user() -> Response:
     from service.ProjectService import ProjectService
     user_id = get_user_id()
-    result = ProjectService.get_project_creator_by_user_id(user_id)
+    result = ProjectService.get_project_info_by_creator(user_id)
     if result.ok:
         return R.ok(result.content)
     else:

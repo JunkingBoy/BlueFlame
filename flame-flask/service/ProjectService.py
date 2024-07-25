@@ -181,7 +181,7 @@ class ProjectService:
     #         return ServiceResult.fail(f"获取项目失败: {str(e)}")
 
     @staticmethod
-    def get_project_by_creator(user_id: str) -> ServiceResult:
+    def get_project_info_by_creator(user_id: str) -> ServiceResult:
         projects: List[Project] = []
         project_list: List[ProjectDTO] = []
         project_dto: ProjectDTO
