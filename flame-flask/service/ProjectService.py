@@ -79,7 +79,7 @@ class ProjectService:
             if temp_project is None:
                 return ServiceResult.fail(f"can not find project or this project is not for you")
             else:
-                new_project_id = sha256_str(str(f"{now()}{user_id}"))
+                new_project_id = sha256_str(str(f"{now()}{user_id}"), length=17)
                 db.session.query(ProjectUser).filter(
                     ProjectUser.pid == project_id).delete(synchronize_session=False) # type: ignore
                 # db.session.query(Project).filter(

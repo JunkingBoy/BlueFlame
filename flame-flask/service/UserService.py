@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-25 13:14:48
+LastEditTime: 2024-07-25 13:31:10
 Description: 
 '''
 import hashlib
@@ -116,7 +116,7 @@ class UserService:
                 return ServiceResult.fail(f"Password not match")
             else:
                 new_user_id = sha256_str(str(f"{now()}{user_id}"), length=17)
-                temp_project_id = sha256_str(str(f"{now()}{user_id}"))
+                temp_project_id = sha256_str(str(f"{now()}{user_id}"), length=17)
                 random_phone = ''.join(random.choices(string.digits, k=12))
                 db.session.query(Case).filter(
                     Case.uid == user_id # type: ignore
