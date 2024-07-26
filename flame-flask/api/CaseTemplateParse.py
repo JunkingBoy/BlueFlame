@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-27 00:07:49
+LastEditTime: 2024-07-27 02:45:59
 Description: 
 '''
 from flask_jwt_extended import jwt_required
@@ -78,8 +78,8 @@ def upload_file():
 
     try:
         case_template = parse_case_template_excel(file, sheet_name='')
-        data: List[CaseDbTemplate] = parse_process(case_template, type=type, pid=project_id, uid=user_id)
-        result = CaseService.create_init(data, get_user_id())
+        data: List[CaseDbTemplate] = parse_process(case_template, type=type, pid=project_id)
+        result = CaseService.create_init(data, user_id=user_id)
     except Exception as err:
         current_app.logger.error(f"Error occurred: {err}", exc_info=True)
         return R.create(500, f"Internal server error")
