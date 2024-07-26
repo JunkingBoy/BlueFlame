@@ -2,6 +2,7 @@ from model import db
 from typing import List, Optional
 from flask import current_app
 from typing import Dict, List, Optional, Any
+from sqlalchemy import bindparam
 
 from model.Project import Project, ProjectUser
 from model.Case import Case
@@ -30,17 +31,38 @@ class CaseService:
         pid: str = data[0].pid
         uid: str = data[0].uid
         type: int = data[0].case_type
+        is_init: bool
         inser_data: Case
 
         if uid != user_id:
             return ServiceResult.fail(f"you are not those case owner")
+        
+        is_init = db.session.query(
+            Project.is_init # type: ignore
+        ).filter(
+            Project.pid == bindparam('pid_param'), # type: ignore
+            Project.creator == bindparam('uid_param'), # type: ignore
+            Project.is_delete == bindparam('is_delete_param') # type: ignore
+        ).params(
+            pid_param=pid,
+            uid_param=uid,
+            is_delete_param=False
+        ).first()
+
+        if is_init is None or is_init == True:
+            return ServiceResult.fail(f"this project is init")
 
         try:
             project = db.session.query(Project).filter(
-                Project.pid == pid, # type: ignore
-                Project.creator == uid, # type: ignore
-                Project.is_delete == False, # type: ignore
-                Project.is_init == False # type: ignore
+                Project.pid == bindparam('pid_param'), # type: ignore
+                Project.creator == bindparam('uid_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param'), # type: ignore
+                Project.is_init == bindparam('is_init_param') # type: ignore
+            ).params(
+                pid_param=pid,
+                uid_param=uid,
+                is_delete_param=False,
+                is_init_param=False
             ).first()
 
             if project is None:
@@ -80,17 +102,24 @@ class CaseService:
 
         try:
             project_user = db.session.query(ProjectUser).filter(
-                ProjectUser.pid == project_id, # type: ignore
-                ProjectUser.uid == user_id, # type: ignore
+                ProjectUser.pid == bindparam('pid_param'), # type: ignore
+                ProjectUser.uid == bindparam('uid_param'), # type: ignore
+            ).params(
+                pid_param=project_id,
+                uid_param=user_id
             ).first()
 
             if project_user is None:
                 return ServiceResult.fail(f"you can not get this project case info")
 
             project = db.session.query(Project).filter(
-                Project.pid == project_id, # type: ignore
-                Project.is_init == True, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid == bindparam('pid_param'), # type: ignore
+                Project.is_init == bindparam('is_init_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                pid_param=project_id,
+                is_init_param=True,
+                is_delete_param=False
             ).first()
 
             if project is None:
@@ -101,7 +130,9 @@ class CaseService:
                     Case.case_type, # type: ignore
                     Case.case_detail # type: ignore
                 ).filter(
-                    Case.pid == project_id, # type: ignore
+                    Case.pid == bindparam('pid_param'), # type: ignore
+                ).params(
+                    pid_param=project_id
                 ).all()
                 return ServiceResult.success(f"get case info success")
         except Exception as e:
