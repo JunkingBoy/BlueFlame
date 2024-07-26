@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-26 18:21:08
+LastEditTime: 2024-07-26 18:58:59
 Description: 
 '''
 from model import db
@@ -247,20 +247,25 @@ class ProjectService:
         try:
             project_ids = [
                 pu.pid
-                for pu in db.session.query(ProjectUser).filter_by(user_id=user_id).all() # type: ignore
+                for pu in db.session.query(ProjectUser).filter(
+                    user_id == bindparam('user_id_param') # type: ignore
+                ).params(
+                    user_id_param=user_id # type: ignore
+                ).all()
             ]
 
             if not project_ids:
                 return ServiceResult.fail(f"No projects found for this user")
             
             projects = db.session.query(Project).filter(
-                Project.pid.in_(project_ids) # type: ignore
+                Project.pid.in_(bindparam('project_ids_params', expanding=True)) # type: ignore
+            ).params(
+                project_ids_params=project_ids # type: ignore
             ).all()
 
             for project in projects:
-                # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id, # type: ignore
+                    project_id=project.pid, # type: ignore
                     project_name=project.project_name, # type: ignore
                     project_desc=project.project_desc, # type: ignore
                 )
