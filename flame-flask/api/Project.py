@@ -55,6 +55,29 @@ def modify_project() -> Response:
     else:
         return R.err(result.content)
 
+# @bp.route("/all/info", methods=["GET"])
+# @jwt_required()
+# def project_info() -> Response:
+#     from service.ProjectService import ProjectService
+
+#     result = ProjectService.all_project()
+#     if result.ok:
+#         return R.ok(result.content)
+#     else:
+#         return R.err(result.content)
+
+
+# @bp.route('/<string:project_id>', methods=['GET'])
+# @jwt_required()
+# def info(project_id: str) -> Response:
+#     from service.ProjectService import ProjectService
+#     result = ProjectService.get_project_by_project_id(project_id)
+#     if result.ok:
+#         return R.ok(result.content)
+#     else:
+#         return R.err(result.content)
+
+
 @bp.route('/creat/info', methods=['GET'])
 @jwt_required()
 def get_projects_by_user() -> Response:
