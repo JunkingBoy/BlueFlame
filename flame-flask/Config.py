@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-26 20:18:01
+LastEditTime: 2024-07-27 03:05:37
 Description: 
 '''
 import os
@@ -46,7 +46,7 @@ def create_app() -> Flask:
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    app.config['SQLALCHEMY_ECHO'] = True
+    # app.config['SQLALCHEMY_ECHO'] = True
 
     appHandler: Handler = log()
 
