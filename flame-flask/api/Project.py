@@ -78,7 +78,7 @@ def modify_project() -> Response:
 #         return R.err(result.content)
 
 
-@bp.route('/info', methods=['GET'])
+@bp.route('/creat/info', methods=['GET'])
 @jwt_required()
 def get_projects_by_user() -> Response:
     from service.ProjectService import ProjectService

@@ -29,28 +29,8 @@ class CaseService:
     def create_init(data: List[CaseDbTemplate], user_id: str) -> ServiceResult:
         project: Optional[Project] = None
         pid: str = data[0].pid
-        uid: str = data[0].uid
         type: int = data[0].case_type
-        is_init: bool
         inser_data: Case
-
-        if uid != user_id:
-            return ServiceResult.fail(f"you are not those case owner")
-        
-        is_init = db.session.query(
-            Project.is_init # type: ignore
-        ).filter(
-            Project.pid == bindparam('pid_param'), # type: ignore
-            Project.creator == bindparam('uid_param'), # type: ignore
-            Project.is_delete == bindparam('is_delete_param') # type: ignore
-        ).params(
-            pid_param=pid,
-            uid_param=uid,
-            is_delete_param=False
-        ).first()
-
-        if is_init is None or is_init == True:
-            return ServiceResult.fail(f"this project is init")
 
         try:
             project = db.session.query(Project).filter(
@@ -60,16 +40,16 @@ class CaseService:
                 Project.is_init == bindparam('is_init_param') # type: ignore
             ).params(
                 pid_param=pid,
-                uid_param=uid,
+                uid_param=user_id,
                 is_delete_param=False,
                 is_init_param=False
             ).first()
 
             if project is None:
-                return ServiceResult.fail(f"can not found this project")
+                return ServiceResult.fail(f"can not found this project or this project is init")
             else:
                 for case in data:
-                    inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=uid, case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
+                    inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=user_id, case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
                     db.session.add(inser_data)
                 project.is_init = True
                 db.session.commit()
