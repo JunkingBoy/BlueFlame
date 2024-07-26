@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-23 18:11:04
+LastEditTime: 2024-07-26 20:18:01
 Description: 
 '''
 import os
@@ -77,8 +77,8 @@ def get_value_from_yaml(key) -> Any:
 
 def log() -> Handler:
     handler: Handler = logging.StreamHandler()
-    # handler.setLevel(logging.DEBUG)
-    handler.setLevel(logging.INFO)
+    handler.setLevel(logging.DEBUG)
+    # handler.setLevel(logging.INFO)
     formatter: object = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
