@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 21:31:44
+LastEditTime: 2024-07-26 18:58:59
 Description: 
 '''
 from model import db
@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from flask_jwt_extended import jwt_required
 from service.UserService import get_user_id
 from sqlalchemy.orm import aliased
-from sqlalchemy import cast, String
+from sqlalchemy import bindparam
 
 from dto.receive.ProjectDto import ProjectCreateDTO
 from model.Project import Project, ProjectUser
@@ -36,8 +36,11 @@ class ProjectService:
 
         try:
             project_number = db.session.query(func.count(Project.pid)).filter( # type: ignore
-                Project.creator == user_id,
-                Project.is_delete == False
+                Project.creator == bindparam('creator_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                creator_param=user_id, # type: ignore
+                is_delete_param=False # type: ignore
             ).scalar()
 
             if project_number >= 5:
@@ -45,14 +48,20 @@ class ProjectService:
 
             project_dict = project.model_dump()
             project_dict['user_id'] = user_id
-            p = Project(**project_dict)
+            p = Project(project_id=sha256_str(f"{project.project_name}{user_id}{now()}"), **project_dict)
             existed = db.session.query(Project).filter(
-                Project.pid == p.pid # type: ignore
+                Project.project_name == bindparam('project_name_param'), # type: ignore
+                Project.creator == bindparam('creator_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                project_name_param=p.project_name, # type: ignore
+                creator_param=user_id, # type: ignore
+                is_delete_param=False # type: ignore
             ).first()
             if existed:
-                return ServiceResult.fail(f"there is a same project")
+                return ServiceResult.fail(f"you have a same name project")
             else:
-                pu = ProjectUser(project_id=project.project_id, user_id=user_id) # type: ignore
+                pu = ProjectUser(project_id=sha256_str(f"{project.project_name}{user_id}{now()}"), user_id=user_id) # type: ignore
                 db.session.add(p)
                 db.session.add(pu)
                 db.session.commit()
@@ -66,28 +75,32 @@ class ProjectService:
     @staticmethod
     def delete(project_id: str, user_id: str) -> ServiceResult:
         temp_project: Optional[Project] = None
-        new_project_id: str = ""
 
         try:
             temp_project = db.session.query(Project).filter(
-                Project.pid == project_id, # type: ignore
-                Project.creator == user_id, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid == bindparam('pid_param'), # type: ignore
+                Project.creator == bindparam('creator_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                pid_param=project_id, # type: ignore
+                creator_param=user_id, # type: ignore
+                is_delete_param=False # type: ignore
             ).first()
 
             if temp_project is None:
                 return ServiceResult.fail(f"can not find project or this project is not for you")
             else:
-                new_project_id = sha256_str(str(f"{now()}{user_id}"))
-                db.session.query(ProjectUser).filter(
-                    ProjectUser.pid == project_id).delete(synchronize_session=False) # type: ignore
-                # db.session.query(Project).filter(
-                #     Project.project_id == project_id).update({"project_id": new_project_id, "is_delete": True, "update_time": now()})
                 db.session.query(Case).filter(
-                    Case.pid == project_id).update({"pid": new_project_id}) # type: ignore
-                temp_project.pid = new_project_id # type: ignore
+                    Case.pid == bindparam('pid_param') # type: ignore
+                ).params(
+                    pid_param=project_id, # type: ignore
+                ).delete(synchronize_session=False) # type: ignore
+                db.session.query(ProjectUser).filter(
+                    ProjectUser.pid == bindparam('pid_param') # type: ignore
+                ).params(
+                    pid_param=project_id, # type: ignore
+                ).delete(synchronize_session=False) # type: ignore
                 temp_project.is_delete = True # type: ignore
-                temp_project.update_time = now() # type: ignore
                 db.session.commit()
                 return ServiceResult.success(f"delete project success")
         except Exception as e:
@@ -101,9 +114,13 @@ class ProjectService:
 
         try:
             temp_project = db.session.query(Project).filter(
-                Project.pid == project.project_id, # type: ignore
-                Project.creator == user_id, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid == bindparam('pid_param'), # type: ignore
+                Project.creator == bindparam('creator_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                pid_param=project.project_id, # type: ignore
+                creator_param=user_id, # type: ignore
+                is_delete_param=False # type: ignore
             ).first()
 
             if not temp_project:
@@ -182,9 +199,8 @@ class ProjectService:
     #         return ServiceResult.fail(f"获取项目失败: {str(e)}")
 
     @staticmethod
-    def get_project_creator_by_user_id(user_id: str) -> ServiceResult:
+    def get_project_info_by_creator(user_id: str) -> ServiceResult:
         projects: List[Project] = []
-        project_ids: List[str] = []
         project_list: List[ProjectDTO] = []
         project_dto: ProjectDTO
         '''
@@ -194,25 +210,17 @@ class ProjectService:
         '''
 
         try:
-            # 获取用户创建的项目的id
-            project_ids = [
-                pu.pid
-                for pu in db.session.query(ProjectUser).filter(ProjectUser.user_id == user_id).all() # type: ignore
-            ]
-
-            if not project_ids:
-                return ServiceResult.fail(f"No projects found for this user")
-
-            # 获取项目信息
             projects = db.session.query(Project).filter(
-                Project.pid.in_(project_ids), # type: ignore
-                Project.creator == user_id, # type: ignore
+                Project.creator == bindparam('creator_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                creator_param=user_id, # type: ignore
+                is_delete_param=False # type: ignore
             ).all()
 
             for project in projects:
-                # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id, # type: ignore
+                    project_id=project.pid, # type: ignore
                     project_name=project.project_name, # type: ignore
                     project_desc=project.project_desc, # type: ignore
                 )
@@ -239,20 +247,25 @@ class ProjectService:
         try:
             project_ids = [
                 pu.pid
-                for pu in db.session.query(ProjectUser).filter_by(user_id=user_id).all() # type: ignore
+                for pu in db.session.query(ProjectUser).filter(
+                    user_id == bindparam('user_id_param') # type: ignore
+                ).params(
+                    user_id_param=user_id # type: ignore
+                ).all()
             ]
 
             if not project_ids:
                 return ServiceResult.fail(f"No projects found for this user")
             
             projects = db.session.query(Project).filter(
-                Project.pid.in_(project_ids) # type: ignore
+                Project.pid.in_(bindparam('project_ids_params', expanding=True)) # type: ignore
+            ).params(
+                project_ids_params=project_ids # type: ignore
             ).all()
 
             for project in projects:
-                # 创建 ProjectDTO 对象
                 project_dto = ProjectDTO(
-                    project_id=project.project_id, # type: ignore
+                    project_id=project.pid, # type: ignore
                     project_name=project.project_name, # type: ignore
                     project_desc=project.project_desc, # type: ignore
                 )

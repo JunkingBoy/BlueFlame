@@ -2,11 +2,14 @@ from model import db
 from typing import List, Optional
 from flask import current_app
 from typing import Dict, List, Optional, Any
+from sqlalchemy import bindparam
 
 from model.Project import Project, ProjectUser
 from model.Case import Case
 from service.ServiceResult import ServiceResult
 from utils.CaseDb import CaseDbTemplate
+from utils.DateUtil import now
+from utils.StringUtil import sha256_str
 
 # def data_to_dict_list(data: List[Case]) -> List[Dict[str, Any]]:
 #     ret_data: List[Dict[str, Any]] = []
@@ -23,31 +26,30 @@ from utils.CaseDb import CaseDbTemplate
 
 class CaseService:
     @staticmethod
-    def create(data: List[CaseDbTemplate], user_id: str) -> ServiceResult:
+    def create_init(data: List[CaseDbTemplate], user_id: str) -> ServiceResult:
         project: Optional[Project] = None
         pid: str = data[0].pid
-        uid: str = data[0].uid
-        type: str = data[0].case_type
+        type: int = data[0].case_type
         inser_data: Case
-        time: int = 0
-
-        if uid != user_id:
-            return ServiceResult.fail(f"you are not those case owner")
 
         try:
             project = db.session.query(Project).filter(
-                Project.pid == pid, # type: ignore
-                Project.creator == uid, # type: ignore
-                Project.is_delete == False, # type: ignore
-                Project.is_init == False # type: ignore
+                Project.pid == bindparam('pid_param'), # type: ignore
+                Project.creator == bindparam('uid_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param'), # type: ignore
+                Project.is_init == bindparam('is_init_param') # type: ignore
+            ).params(
+                pid_param=pid,
+                uid_param=user_id,
+                is_delete_param=False,
+                is_init_param=False
             ).first()
 
             if project is None:
-                return ServiceResult.fail(f"can not found this project")
+                return ServiceResult.fail(f"can not found this project or this project is init")
             else:
                 for case in data:
-                    inser_data = Case(init_data=case.case_detail, cid=f"{user_id}{time}" , case_type=type, project_id=pid, user_id=uid, row_hash=case.case_row_hash)
-                    time += 1
+                    inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=user_id, case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
                     db.session.add(inser_data)
                 project.is_init = True
                 db.session.commit()
@@ -56,7 +58,17 @@ class CaseService:
             db.session.rollback()
             current_app.logger.error(f"case insert failed: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"case upload failed")
-    
+
+    # @staticmethod
+    # def create_merge(data: List[CaseDbTemplate], project_id: str, user_id: str) -> ServiceResult:
+    #     '''
+    #     提交的用户是项目创建者
+    #     case_type: 0: func_case, 1: api_case -> 确保cid的绝对唯一 -> uid+file+now进行hash结果在进行索引的新增
+    #     merge以后的cid是uid+plan_id+now进行hash然后结果进行索引的新增
+    #     新增case_log记录case的相关变更 -> 对于case_log只有add的操作 -> 对那一次的merge操作进行记录 -> 提供commit_hash字段.那一次的所有db的操作都打上该commit_hash
+    #     '''
+
+
     @staticmethod
     def get_all_case(project_id: str, user_id: str) -> ServiceResult:
         '''
@@ -70,17 +82,24 @@ class CaseService:
 
         try:
             project_user = db.session.query(ProjectUser).filter(
-                ProjectUser.pid == project_id, # type: ignore
-                ProjectUser.uid == user_id, # type: ignore
+                ProjectUser.pid == bindparam('pid_param'), # type: ignore
+                ProjectUser.uid == bindparam('uid_param'), # type: ignore
+            ).params(
+                pid_param=project_id,
+                uid_param=user_id
             ).first()
 
             if project_user is None:
                 return ServiceResult.fail(f"you can not get this project case info")
 
             project = db.session.query(Project).filter(
-                Project.pid == project_id, # type: ignore
-                Project.is_init == True, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid == bindparam('pid_param'), # type: ignore
+                Project.is_init == bindparam('is_init_param'), # type: ignore
+                Project.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                pid_param=project_id,
+                is_init_param=True,
+                is_delete_param=False
             ).first()
 
             if project is None:
@@ -91,9 +110,10 @@ class CaseService:
                     Case.case_type, # type: ignore
                     Case.case_detail # type: ignore
                 ).filter(
-                    Case.pid == project_id, # type: ignore
+                    Case.pid == bindparam('pid_param'), # type: ignore
+                ).params(
+                    pid_param=project_id
                 ).all()
-                print(data)
                 return ServiceResult.success(f"get case info success")
         except Exception as e:
             current_app.logger.error(f"case get all failed: {str(e)}", exc_info=True)

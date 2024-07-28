@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 21:40:30
+LastEditTime: 2024-07-26 04:02:44
 Description: 
 '''
 import hashlib
@@ -13,10 +13,13 @@ from flask import current_app
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_jwt_extended import create_access_token
 from model import db
+from sqlalchemy import bindparam
 
 from .ServiceResult import ServiceResult
 
 from model.User import User
+from model.Project import Project, ProjectUser
+from model.Case import Case
 
 from dto.receive.UserDto import UserRegisterDTO, UserLoginDTO, UserModifyPasswordDTO, UserModifyNameDTO, UserLogoutDTO
 
@@ -39,8 +42,11 @@ class UserService:
 
         # 检查电话号码是否已存在
         existing_user = db.session.query(User).filter(
-            User.phone == user_dto.phone, # type: ignore
-            User.is_logout == False # type: ignore
+            User.phone == bindparam('phone_param'), # type: ignore
+            User.is_delete == bindparam('is_delete_param') # type: ignore
+        ).params(
+            phone_param=user_dto.phone,
+            is_delete_param=False
         ).first()
 
         if existing_user:
@@ -50,7 +56,7 @@ class UserService:
 
             hashed_pwd = hashlib.sha256(user_dto.password.encode()).hexdigest()
 
-            user = User(user_id=sha256_str(user_dto.phone), user_name=user_name, phone=user_dto.phone, password=hashed_pwd)
+            user = User(user_id=sha256_str(f"{user_dto.phone}{now()}"), user_name=user_name, phone=user_dto.phone, password=hashed_pwd)
             db.session.add(user)
             db.session.commit()
             return ServiceResult.success(f"User created successfully")
@@ -63,17 +69,22 @@ class UserService:
 
         try:
             existing_user = db.session.query(User).filter(
-                User.phone == user_dto.phone, # type: ignore
-                User.is_logout == False # type: ignore
+                User.phone == bindparam('phone_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                phone_param=user_dto.phone,
+                is_delete_param=False
             ).first()
 
             if not existing_user:
                 return ServiceResult.fail(f"Phone number not registered")
 
-            #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
             user = db.session.query(User).filter(
-                User.phone == user_dto.phone, # type: ignore
-                User.is_logout == False # type: ignore
+                User.phone == bindparam('phone_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                phone_param=user_dto.phone,
+                is_delete_param=False
             ).first()
 
             if user is None:
@@ -85,45 +96,60 @@ class UserService:
                 return ServiceResult.fail(f"Password not match")
             else:
                 token = create_access_token(identity=user.uid)
-                # 返回 Bearer token
                 return ServiceResult.success({"token": token, "token_type": "Bearer"})
         except Exception as e:
             current_app.logger.error(f"login fail {e}")
             return ServiceResult.fail(f"login fail")
 
     @staticmethod
-    def logout(user_dto: UserLogoutDTO, user_id: str) -> ServiceResult:
+    def delete(user_dto: UserLogoutDTO, user_id: str) -> ServiceResult:
         user: Optional[User] = None
         temp_password: str = ""
-        new_user_id: str = ""
         random_phone: str = ""
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id, # type: ignore
-                User.is_logout == False # type: ignore
+                User.uid == bindparam('uid_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                uid_param=user_id,
+                is_delete_param=False
             ).first()
 
             if user is None:
                 return ServiceResult.fail(f"User not found")
-            
+
             temp_password = str(hashlib.sha256(user_dto.password.encode()).hexdigest())
 
             if str(user.password) != temp_password:
                 return ServiceResult.fail(f"Password not match")
             else:
-                new_user_id = sha256_str(str(f"{now()}{user_id}"), length=17)
                 random_phone = ''.join(random.choices(string.digits, k=12))
-                user.uid = new_user_id # type: ignore
+                db.session.query(Case).filter(
+                    Case.uid == bindparam('uid_param') # type: ignore
+                ).params(
+                    uid_param=user_id
+                ).delete(synchronize_session=False)
+                db.session.query(ProjectUser).filter(
+                    ProjectUser.uid == bindparam('uid_param') # type: ignore
+                ).params(
+                    uid_param=user_id
+                ).delete(synchronize_session=False)
+                db.session.query(Project).filter(
+                    Project.creator == bindparam('creator_param'), # type: ignore
+                    Project.is_delete == bindparam('is_delete_param') # type: ignore
+                ).params(
+                    creator_param=user_id,
+                    is_delete_param=False
+                ).update({'is_delete': True})
                 user.phone = random_phone # type: ignore
-                user.is_logout = True # type: ignore
-                user.update_time = now() # type: ignore
+                user.is_delete = True # type: ignore
                 db.session.commit()
-                return ServiceResult.success(f"logout successful")
+                return ServiceResult.success(f"user delete successful")
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"logout fail {e}")
-            return ServiceResult.fail(f"logout fail")
+            current_app.logger.error(f"user delete fail {e}")
+            return ServiceResult.fail(f"user delete fail")
 
     @staticmethod
     def modify_password(user_dto: UserModifyPasswordDTO, user_id: str) -> ServiceResult:
@@ -133,8 +159,11 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id, # type: ignore
-                User.is_logout == False # type: ignore
+                User.uid == bindparam('uid_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                uid_param=user_id,
+                is_delete_param=False
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
@@ -160,8 +189,11 @@ class UserService:
 
         try:
             user = db.session.query(User).filter(
-                User.uid == user_id, # type: ignore
-                User.is_logout == False # type: ignore
+                User.uid == bindparam('uid_param'), # type: ignore
+                User.is_delete == bindparam('is_delete_param') # type: ignore
+            ).params(
+                uid_param=user_id,
+                is_delete_param=False
             ).first()
             if user is None:
                 return ServiceResult.fail(f"User not found")
@@ -176,7 +208,7 @@ class UserService:
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"modify name fail {e}")
-            return ServiceResult.fail("modify name fail")
+            return ServiceResult.fail(f"modify name fail")
 
 @jwt_required()
 def get_user_id() -> str:

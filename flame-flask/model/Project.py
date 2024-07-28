@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-23 18:18:54
+LastEditTime: 2024-07-26 01:27:59
 Description: 
 '''
 from . import db
@@ -14,12 +14,12 @@ from utils import DateUtil
 class Project(db.Model):
     __tablename__ = 'project'
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    pid: str = db.Column(db.String(17), unique=True, nullable=False)
+    pid: str = db.Column(db.String(16), unique=True, nullable=False)
     project_name: Optional[str] = db.Column(db.String(200), unique=False, nullable=False)
     project_desc: Optional[str] = db.Column(db.Text, unique=False, nullable=True)
     is_init: bool = db.Column(db.Boolean, unique=False, nullable=False, default=False)
     is_delete: bool = db.Column(db.Boolean, unique=False, nullable=False, default=False)
-    creator: str = db.Column(db.String(17), unique=False, nullable=False)
+    creator: str = db.Column(db.String(16), unique=False, nullable=False)
     create_time: datetime = db.Column(db.TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now)
     update_time: datetime = db.Column(db.TIMESTAMP(timezone=True), nullable=False, default=DateUtil.now, onupdate=DateUtil.now)
 

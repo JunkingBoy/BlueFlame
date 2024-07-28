@@ -28,24 +28,24 @@ class PlanService:
 
         try:
             project = db.session.query(Project).filter(
-                Project.pid == plan_dto.pid, # type: ignore
-                Project.is_init = True, # type: ignore
-                Project.is_delete == False # type: ignore
+                Project.pid.is_(plan_dto.pid), # type: ignore
+                Project.is_init.is_(True), # type: ignore
+                Project.is_delete.is_(False) # type: ignore
             ).first()
 
             if project is None:
                 return ServiceResult.fail(f"project not found or you can't create plan for this project")
             
             project_user = db.session.query(ProjectUser).filter(
-                ProjectUser.pid == plan_dto.pid, # type: ignore
-                ProjectUser.uid == user_id # type: ignore
+                ProjectUser.pid.is_(plan_dto.pid), # type: ignore
+                ProjectUser.uid.is_(user_id) # type: ignore
             ).first()
 
             if project_user is None:
                 return ServiceResult.fail(f"you can't create plan for this project")
             
             case_id_list = db.session.query(func.count(Case.cid)).filter( # type: ignore
-                Case.pid == plan_dto.pid, # type: ignore
+                Case.pid.is_(plan_dto.pid), # type: ignore
                 Case.cid.in_(plan_dto.cid_array) # type: ignore
             ).scalar()
 

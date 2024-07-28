@@ -18,3 +18,5 @@ psycopg2-binary==2.9.3
 
 # 表单验证
 pydantic==2.7.3
+
+python-dateutil==2.9.0
