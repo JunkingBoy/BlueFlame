@@ -170,3 +170,4 @@ ehthumbs.db
 tmp/
 .vscode/
 tests/
+tmp_response/

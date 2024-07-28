@@ -1,92 +1,102 @@
-from datetime import datetime
-from pytz import utc
-from dataclasses import dataclass, asdict
-import hashlib
-from flask import Blueprint, Response
-from flask_jwt_extended import  create_access_token, get_jwt_identity, jwt_required
-from utils.CommonResponse import R
+'''
+Author: Lucifer
+Data: Do not edit
+LastEditors: Lucifer
+LastEditTime: 2024-07-22 17:58:49
+Description: 
+'''
+from typing import Optional
+from flask import Blueprint, Response, redirect, session, url_for
+from flask_jwt_extended import jwt_required
+from pydantic import ValidationError
 from flask import request
-from model.User import User, UserIdentity
 
-user = Blueprint("user", __name__)
+from utils.CommonResponse import R
+from service.UserService import get_user_id, ServiceResult
+from dto.receive.UserDto import UserRegisterDTO
 
-@user.route("/register", methods=["POST"])
+bp = Blueprint("user", __name__)
+
+@bp.route("/register", methods=["POST"])
 def user_register() -> Response:
-    """
-    1. 检查电话号码是否已经存在
-    2. 加密密码, 使用确定性hash, sha256
-    3. 把加密密码写进数据库, 然后生成 jwt, 返回json
-    """
     from service.UserService import UserService
-    
-    
-    data = request.json
-    if not data:
-        return R.err(
-            {"error": "No data provided, `Phone` and `Password` are required"})
+    try:
+        # 使用 Pydantic 模型进行校验
+        user: Optional[UserRegisterDTO] = UserRegisterDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(UserRegisterDTO.custom_errors(e))
 
-    phone = str(data.get("phone"))
-    pwd = data.get("password")
-    pwd_confirm = str(data.get("password_confirm"))
+    result: ServiceResult = UserService.create(user)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
-    if not isinstance(pwd, str):
-        return R.err({"error": "`Password` must be a string"})
-
-
-    if pwd != pwd_confirm:
-        return R.err({"error": "Password not match double confirm password"})
-
-    existing_user = User.query.filter_by(phone=phone).first()
-    if existing_user:
-        return R.err({"error": "Phone number already registered"})
-
-    pwd = hashlib.sha256(pwd.encode()).hexdigest()
-
-    user = User(phone=phone, password=pwd)
-    UserService.create(user)
-
-    return R.ok("用户创建成功")
-
-
-@user.route("/login", methods=["POST"])
+@bp.route("/login", methods=["POST"])
 def user_login() -> Response:
-    data = request.json
-    if not data:
-        return R.err({
-            "error":
-            "No data provided, `phone`, `password` are required"
-        })
+    from dto.receive.UserDto import UserLoginDTO
+    from service.UserService import UserService
+    try:
+        user: Optional[UserLoginDTO] = UserLoginDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(UserLoginDTO.custom_errors(e))
 
-    phone = str(data.get("phone"))
-    input_pwd = str(data.get("password"))
+    result: ServiceResult = UserService.login(user)
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
 
-    # Check if the phone number already exists
-    existing_user = User.query.filter_by(phone=phone).first()
-    if not existing_user:
-        return R.err({"error": "Phone number not registered"})
-
-    #  根据 phone 查询数据库, 取到 password, 然后生成 jwt, 返回json
-    user: User | None = User.query.filter_by(phone=phone).first()
-    if user is None:
-        return R.err({"error": "User not found"})
-
-    if hashlib.sha256(str(input_pwd).encode()).hexdigest() != user.password:
-        return R.err({"error": "Password not match(Compare DB)"})
-
-    token = create_access_token(identity=UserIdentity(
-        phone=user.phone, user_id=user.user_id).to_dict())
-
-    # 返回 Bearer token
-    return R.ok({"token": token, "token_type": "Bearer"})
-
-
+@bp.route("/delete", methods=["DELETE"])
 @jwt_required()
-def get_user_indentity() -> UserIdentity:
-    identity_dict = get_jwt_identity()
-    return UserIdentity(**identity_dict)
+def user_delete() -> Response:
+    from dto.receive.UserDto import UserLogoutDTO
+    from service.UserService import UserService
 
+    try:
+        user: Optional[UserLogoutDTO] = UserLogoutDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(UserLogoutDTO.custom_errors(e))
 
-@user.route("/info", methods=["GET"])
+    result: ServiceResult = UserService.delete(user, get_user_id())
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
+
+@bp.route("/modify", methods=["PUT"])
+@jwt_required()
+def user_modify() -> Response:
+    from dto.receive.UserDto import UserModifyPasswordDTO, UserModifyNameDTO
+    from service.UserService import UserService
+
+    user: UserModifyPasswordDTO | UserModifyNameDTO
+
+    try:
+        if 'password' and 'new_password' and 'new_password_confirm' in request.get_json():
+            user = UserModifyPasswordDTO(**request.get_json())
+        else:
+            user = UserModifyNameDTO(**request.get_json())
+    except ValidationError as e:
+        return R.err(UserModifyPasswordDTO.custom_errors(e))
+    
+    if isinstance(user, UserModifyNameDTO):
+        result: ServiceResult = UserService.modify_name(user, get_user_id())
+    else:
+        result: ServiceResult = UserService.modify_password(user, get_user_id())
+
+    if result.ok:
+        return R.ok(result.content)
+    else:
+        return R.err(result.content)
+
+@bp.route("/info", methods=["GET"])
 @jwt_required()
 def user_info():
-    return R.ok(get_user_indentity().to_dict())
+    return R.ok(get_user_id())
+
+# @bp.route('/logout', methods=['GET'])
+# @jwt_required()
+# def logout():
+#     session.clear()
+#     return R.ok("Logout success")
