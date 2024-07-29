@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-26 18:58:59
+LastEditTime: 2024-07-30 02:25:28
 Description: 
 '''
 from model import db
@@ -203,11 +203,9 @@ class ProjectService:
         projects: List[Project] = []
         project_list: List[ProjectDTO] = []
         project_dto: ProjectDTO
-        '''
-        先从user_project中间表查询user关联的project_id
-        拿这些project_id到project表查询项目的信息 -> creator = user_id
-        构建projectDTO返回
-        '''
+        case_info: CaseCountDTO
+        all_case_count: int
+        pass_case_count: int
 
         try:
             projects = db.session.query(Project).filter(
@@ -219,11 +217,43 @@ class ProjectService:
             ).all()
 
             for project in projects:
-                project_dto = ProjectDTO(
-                    project_id=project.pid, # type: ignore
-                    project_name=project.project_name, # type: ignore
-                    project_desc=project.project_desc, # type: ignore
-                )
+                if project.is_init == False:
+                    case_info = CaseCountDTO(
+                        all_case=0,
+                        pass_case=0
+                    )
+                    project_dto = ProjectCaseInfoDTO(
+                        project_id=project.pid,
+                        project_name=project.project_name, # type: ignore
+                        project_desc=project.project_desc,
+                        case=case_info
+                    )
+                else:
+                    all_case_count = db.session.query(Case).filter(
+                        Case.pid == bindparam('pid_param'), # type: ignore
+                    ).params(
+                        pid_param=project.pid, # type: ignore
+                    ).count()
+
+                    pass_case_count = db.session.query(Case).filter(
+                        Case.pid == bindparam('pid_param'), # type: ignore
+                        Case.case_state == bindparam('case_state_param') # type: ignore
+                    ).params(
+                        pid_param=project.pid, # type: ignore
+                        case_state_param=CaseState.PASS.value # type: ignore
+                    ).count()
+
+                    case_info = CaseCountDTO(
+                        all_case=all_case_count,
+                        pass_case=pass_case_count
+                    )
+
+                    project_dto = ProjectCaseInfoDTO(
+                        project_id=project.pid,
+                        project_name=project.project_name, # type: ignore
+                        project_desc=project.project_desc,
+                        case=case_info
+                    )
 
                 project_list.append(project_dto)
 

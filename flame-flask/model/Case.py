@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 18:41:09
+LastEditTime: 2024-07-30 01:58:40
 Description: 
 '''
 from . import db
@@ -40,7 +40,8 @@ class Case(db.Model):
     uid: str = db.Column(db.String(16), unique=False, nullable=False)
     case_type: int = db.Column(db.Integer, unique=False, nullable=False)
     case_detail: JSON = db.Column(db.JSON, unique=False, nullable=False)
-    case_row_hash: str = db.Column(db.String(80), unique=False, nullable=False)
+    case_state: str = db.Column(db.String(16), unique=False, nullable=False, default=CaseState.WAITING.value)
+    case_row_hash: str = db.Column(db.String(16), unique=False, nullable=False)
     create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
                         nullable=False,
                         default=DateUtil.now)
@@ -49,13 +50,14 @@ class Case(db.Model):
                         default=DateUtil.now,
                         onupdate=DateUtil.now)
 
-    def __init__(self, cid: str, project_id: str, user_id: str, case_type: int, data: JSON, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
+    def __init__(self, cid: str, project_id: str, user_id: str, case_type: int, data: JSON, state: str, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
         super().__init__()
         self.cid = cid
         self.pid = project_id
         self.uid = user_id
         self.case_type = case_type
         self.case_detail = data
+        self.case_state = state
         self.case_row_hash = row_hash
 
     def __repr__(self):

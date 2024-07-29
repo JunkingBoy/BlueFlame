@@ -49,7 +49,7 @@ class CaseService:
                 return ServiceResult.fail(f"can not found this project or this project is init")
             else:
                 for case in data:
-                    inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=user_id, case_type=type, data=case.case_detail, row_hash=case.case_row_hash)
+                    inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=user_id, case_type=type, data=case.case_detail, state=case.case_state, row_hash=case.case_row_hash)
                     db.session.add(inser_data)
                 project.is_init = True
                 db.session.commit()
