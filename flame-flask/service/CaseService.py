@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Any
 from sqlalchemy import bindparam
 
 from model.Project import Project, ProjectUser
-from model.Case import Case
+from model.Case import Case, CasePointer
 from service.ServiceResult import ServiceResult
 from utils.CaseDb import CaseDbTemplate
 from utils.DateUtil import now
@@ -30,7 +30,9 @@ class CaseService:
         project: Optional[Project] = None
         pid: str = data[0].pid
         type: int = data[0].case_type
+        c_array: List[str] = []
         inser_data: Case
+        pointer_date: CasePointer
 
         try:
             project = db.session.query(Project).filter(
@@ -50,8 +52,11 @@ class CaseService:
             else:
                 for case in data:
                     inser_data = Case(cid=sha256_str(f"{pid}{user_id}{case.case_row_hash}{now()}"), project_id=pid, user_id=user_id, case_type=type, data=case.case_detail, state=case.case_state, row_hash=case.case_row_hash)
+                    c_array.append(inser_data.cid)
                     db.session.add(inser_data)
                 project.is_init = True
+                pointer_date = CasePointer(pid=pid, p_pointer=None, c_pointer=sha256_str(f"{pid}{user_id}{now()}"), cid_array=c_array)
+                db.session.add(pointer_date)
                 db.session.commit()
                 return ServiceResult.success(f"case upload success")
         except Exception as e:
@@ -70,7 +75,7 @@ class CaseService:
 
 
     @staticmethod
-    def get_all_case(project_id: str, user_id: str) -> ServiceResult:
+    def get_all_case(project_id: str, node: str | None, user_id: str) -> ServiceResult:
         '''
         用户属于项目
         项目没删除
@@ -78,6 +83,9 @@ class CaseService:
         '''
         project: Optional[Project] = None
         project_user: Optional[ProjectUser] = None
+        current_node: Optional[str] = node
+        node_cid_data: List[str]
+        node_data: List[CasePointer]
         data: List[Case] = []
 
         try:
@@ -105,16 +113,33 @@ class CaseService:
             if project is None:
                 return ServiceResult.fail(f"project can not found")
             else:
+                '''
+                先经过case_pointer表查询当前项目的c_pointer指向的cid_array
+                然后拿cid_array去到case表查询出case_detail
+                '''
+                node_cid_data = db.session.query(
+                    CasePointer.cid_array # type: ignore
+                ).filter(
+                    CasePointer.pid == bindparam('pid_param'), # type: ignore
+                    CasePointer.c_pointer == bindparam('c_pointer_param') # type: ignore
+                ).params(
+                    pid_param=project_id,
+                    c_pointer_param=current_node
+                ).scalar()
+
+                node_cid_data = list(node_cid_data)
+
                 data = db.session.query( # type: ignore
                     Case.cid, # type: ignore
                     Case.case_type, # type: ignore
                     Case.case_detail # type: ignore
                 ).filter(
                     Case.pid == bindparam('pid_param'), # type: ignore
+                    Case.cid.in_(node_cid_data) # type: ignore
                 ).params(
-                    pid_param=project_id
+                    pid_param=project_id,
                 ).all()
-                return ServiceResult.success(f"get case info success")
+                return ServiceResult.success(data=data) # type: ignore
         except Exception as e:
             current_app.logger.error(f"case get all failed: {str(e)}", exc_info=True)
             return ServiceResult.fail(f"case get all failed")

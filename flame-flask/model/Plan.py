@@ -8,10 +8,10 @@ from utils import DateUtil
 class Plan(db.Model):
     __tablename__ = 'plan'
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    pid: str = db.Column(db.String(17), unique=False, nullable=False)
-    uid: str = db.Column(db.String(17), unique=False, nullable=False)
-    cid_array: ARRAY = db.Column(db.ARRAY(String(17), dimensions=1), unique=False, nullable=False)
-    plan_cid_array: ARRAY = db.Column(db.ARRAY(String(17), dimensions=1), unique=False, nullable=False)
+    pid: str = db.Column(db.String(16), unique=False, nullable=False)
+    uid: str = db.Column(db.String(16), unique=False, nullable=False)
+    cid_array: ARRAY = db.Column(db.ARRAY(String(16), dimensions=1), unique=False, nullable=False)
+    plan_cid_array: ARRAY = db.Column(db.ARRAY(String(16), dimensions=1), unique=False, nullable=False)
     plan_id: str = db.Column(db.String(16), unique=True, nullable=False)
     plan_name: str = db.Column(db.String(200), unique=False, nullable=False)
     plan_desc: str = db.Column(db.Text, unique=False, nullable=True)
@@ -54,9 +54,9 @@ class Plan(db.Model):
 class PlanCaseStack(db.Model):
     __tablename__ = 'plan_case_stack'
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    cid: str = db.Column(db.String(17), unique=False, nullable=False)
-    uid: str = db.Column(db.String(17), unique=False, nullable=False)
-    plan_id: str = db.Column(db.String(18), unique=False, nullable=False)
+    cid: str = db.Column(db.String(16), unique=False, nullable=False)
+    uid: str = db.Column(db.String(16), unique=False, nullable=False)
+    plan_id: str = db.Column(db.String(16), unique=False, nullable=False)
     case_detail: JSON = db.Column(db.JSON, unique=False, nullable=False)
     create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
                         nullable=False,
