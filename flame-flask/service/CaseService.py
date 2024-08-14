@@ -2,7 +2,7 @@ from model import db
 from typing import List, Optional
 from flask import current_app
 from typing import Dict, List, Optional, Any
-from sqlalchemy import bindparam
+from sqlalchemy import bindparam, func, text
 
 from model.Project import Project, ProjectUser
 from model.Case import Case, CasePointer
@@ -10,6 +10,7 @@ from service.ServiceResult import ServiceResult
 from utils.CaseDb import CaseDbTemplate
 from utils.DateUtil import now
 from utils.StringUtil import sha256_str
+from dto.response.CaseDto import CaseAllDataDTO
 
 # def data_to_dict_list(data: List[Case]) -> List[Dict[str, Any]]:
 #     ret_data: List[Dict[str, Any]] = []
@@ -79,14 +80,15 @@ class CaseService:
         '''
         用户属于项目
         项目没删除
-        获取所有case信息返回
+        结果:
+        根据当前节点的cid_array去到case表查询出case_detail
         '''
         project: Optional[Project] = None
         project_user: Optional[ProjectUser] = None
         current_node: Optional[str] = node
         node_cid_data: List[str]
-        node_data: List[CasePointer]
         data: List[Case] = []
+        pointer_case_data: CaseAllDataDTO
 
         try:
             project_user = db.session.query(ProjectUser).filter(
@@ -116,6 +118,7 @@ class CaseService:
                 '''
                 先经过case_pointer表查询当前项目的c_pointer指向的cid_array
                 然后拿cid_array去到case表查询出case_detail
+                返回的数据结构为: {'c_p': '', 'cid_list': [cid1, cid2, cid3], 'data_list': [case_detail1, case_detail2, case_detail3]}
                 '''
                 node_cid_data = db.session.query(
                     CasePointer.cid_array # type: ignore
@@ -130,15 +133,22 @@ class CaseService:
                 node_cid_data = list(node_cid_data)
 
                 data = db.session.query( # type: ignore
-                    Case.cid, # type: ignore
-                    Case.case_type, # type: ignore
-                    Case.case_detail # type: ignore
+                    Case.case_detail, # type: ignore
+                    Case.case_state, # type: ignore
+                    Case.update_time # type: ignore
                 ).filter(
                     Case.pid == bindparam('pid_param'), # type: ignore
                     Case.cid.in_(node_cid_data) # type: ignore
                 ).params(
                     pid_param=project_id,
                 ).all()
+
+                # pointer_case_data = CaseAllDataDTO( # type: ignore
+                #     c_p=current_node, # type: ignore
+                #     cid_list=node_cid_data,
+                #     data_list=data # type: ignore
+                # )
+
                 return ServiceResult.success(data=data) # type: ignore
         except Exception as e:
             current_app.logger.error(f"case get all failed: {str(e)}", exc_info=True)

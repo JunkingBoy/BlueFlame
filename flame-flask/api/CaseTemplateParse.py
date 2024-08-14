@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-08-10 23:57:25
+LastEditTime: 2024-08-15 04:04:08
 Description: 
 '''
 from flask_jwt_extended import jwt_required
@@ -90,7 +90,7 @@ def upload_file():
         return R.err(result.content)
 
 
-@bp.route('/all', methods=['GET'])
+@bp.route('/current', methods=['GET'])
 @jwt_required()
 def get_all_case():
     result = CaseService.get_all_case(request.args['pid'], request.args['node'], get_user_id())
