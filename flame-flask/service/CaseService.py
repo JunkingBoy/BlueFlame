@@ -2,7 +2,8 @@ from model import db
 from typing import List, Optional
 from flask import current_app
 from typing import Dict, List, Optional, Any
-from sqlalchemy import bindparam, func, text
+from sqlalchemy import bindparam, func, cast
+from sqlalchemy.dialects.postgresql import JSONB
 
 from model.Project import Project, ProjectUser
 from model.Case import Case, CasePointer
@@ -133,9 +134,15 @@ class CaseService:
                 node_cid_data = list(node_cid_data)
 
                 data = db.session.query( # type: ignore
-                    Case.case_detail, # type: ignore
-                    Case.case_state, # type: ignore
-                    Case.update_time # type: ignore
+                    func.jsonb_set(
+                        func.jsonb_set(
+                            cast(Case.case_detail, JSONB),
+                            '{case_state}',
+                            func.to_jsonb(Case.case_state)
+                        ),
+                        '{update_time}',
+                        func.to_jsonb(Case.update_time)
+                    ).label('case_detail')
                 ).filter(
                     Case.pid == bindparam('pid_param'), # type: ignore
                     Case.cid.in_(node_cid_data) # type: ignore
