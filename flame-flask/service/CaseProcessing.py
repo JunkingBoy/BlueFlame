@@ -21,6 +21,7 @@ def parse_process(data: List[Dict[str, Any]], type: int, pid: str) -> List[CaseD
                 'pid': pid,
                 'case_type': type,
                 'case_detail': item,
+                'case_state': item.get('case_actual_outcome'),
                 'case_row_hash': sha256_str(str(item)),
             }
             case_list.append(CaseDbTemplate(**pack_data))

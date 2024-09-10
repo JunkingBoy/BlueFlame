@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-25 12:42:10
+LastEditTime: 2024-08-10 23:39:23
 Description: 
 '''
 from . import db
@@ -16,7 +16,7 @@ class User(db.Model):
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
     uid: str = db.Column(db.String(16), unique=True, nullable=False)
     user_name: str = db.Column(db.String(16), unique=False, nullable=False)
-    phone: str = db.Column(db.String(12), unique=True, nullable=False)
+    phone: str = db.Column(db.String(11), unique=True, nullable=False)
     password: str = db.Column(db.String(120), unique=False, nullable=False)
     is_delete: bool = db.Column(db.Boolean, unique=False, nullable=False, default=False)
     create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),

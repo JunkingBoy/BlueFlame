@@ -2,7 +2,7 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-26 04:02:44
+LastEditTime: 2024-09-10 20:35:54
 Description: 
 '''
 import hashlib
@@ -95,7 +95,7 @@ class UserService:
             if temp_password != user.password:
                 return ServiceResult.fail(f"Password not match")
             else:
-                token = create_access_token(identity=user.uid)
+                token = create_access_token(identity=f"{user.uid}")
                 return ServiceResult.success({"token": token, "token_type": "Bearer"})
         except Exception as e:
             current_app.logger.error(f"login fail {e}")

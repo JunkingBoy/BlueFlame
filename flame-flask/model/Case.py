@@ -2,14 +2,14 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-24 18:41:09
+LastEditTime: 2024-09-10 20:34:58
 Description: 
 '''
 from . import db
 from enum import Enum, unique
 from datetime import datetime
-from sqlalchemy import JSON
-from typing import Optional, Dict, Any
+from sqlalchemy import JSON, ARRAY, String
+from typing import Optional, Dict, List
 
 from utils import DateUtil
 
@@ -40,7 +40,8 @@ class Case(db.Model):
     uid: str = db.Column(db.String(16), unique=False, nullable=False)
     case_type: int = db.Column(db.Integer, unique=False, nullable=False)
     case_detail: JSON = db.Column(db.JSON, unique=False, nullable=False)
-    case_row_hash: str = db.Column(db.String(80), unique=False, nullable=False)
+    case_state: str = db.Column(db.String(16), unique=False, nullable=False, default=CaseState.WAITING.value)
+    case_row_hash: str = db.Column(db.String(16), unique=False, nullable=False)
     create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
                         nullable=False,
                         default=DateUtil.now)
@@ -49,13 +50,14 @@ class Case(db.Model):
                         default=DateUtil.now,
                         onupdate=DateUtil.now)
 
-    def __init__(self, cid: str, project_id: str, user_id: str, case_type: int, data: JSON, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
+    def __init__(self, cid: str, project_id: str, user_id: str, case_type: int, data: JSON, state: str, row_hash: str): # init_data是一个List[dict[]]类型的值,具体的字典类型取决于解析的excel表格
         super().__init__()
         self.cid = cid
         self.pid = project_id
         self.uid = user_id
         self.case_type = case_type
         self.case_detail = data
+        self.case_state = state
         self.case_row_hash = row_hash
 
     def __repr__(self):
@@ -63,14 +65,42 @@ class Case(db.Model):
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id,
+            "id": self.cid,
             "user_id": self.uid,
             "project_id": self.pid,
             "case_detail": self.case_detail,
             "create_time": self.create_time, 
             "update_time": self.update_time, 
         }
+    
+class CasePointer(db.Model):
+    __tablename__ = 'case_pointer'
+    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    pid: str = db.Column(db.String(16), unique=False, nullable=False)
+    p_pointer: str = db.Column(db.String(16), unique=True, nullable=True)
+    c_pointer: str = db.Column(db.String(16), unique=True, nullable=False)
+    cid_array: ARRAY = db.Column(db.ARRAY(String(16), dimensions=1), unique=False, nullable=False)
+    create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now)
+    
+    def __init__(self, pid: str, p_pointer: str | None, c_pointer: str, cid_array: List[str]) -> None:
+        self.pid = pid
+        self.p_pointer = p_pointer # type: ignore
+        self.c_pointer = c_pointer
+        self.cid_array = cid_array # type: ignore
 
+    def __repr__(self) -> str:
+        return f"id: {self.id}, pid: {self.pid}, p_pointer: {self.p_pointer}, c_pointer: {self.c_pointer}, cid_array: {self.cid_array}, create_time: {self.create_time}"
+    
+    def to_dict(self) -> dict:
+        return {
+            "pid": self.pid,
+            "p_pointer": self.p_pointer,
+            "c_pointer": self.c_pointer,
+            "cid_array": self.cid_array,
+            "create_time": self.create_time,
+        }
 
 # class FuncCase(db.Model):
 #     __tablename__ = 'func_case'
