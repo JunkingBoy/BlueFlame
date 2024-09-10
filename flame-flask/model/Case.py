@@ -2,14 +2,14 @@
 Author: Lucifer
 Data: Do not edit
 LastEditors: Lucifer
-LastEditTime: 2024-07-30 01:58:40
+LastEditTime: 2024-08-10 22:51:42
 Description: 
 '''
 from . import db
 from enum import Enum, unique
 from datetime import datetime
-from sqlalchemy import JSON
-from typing import Optional, Dict, Any
+from sqlalchemy import JSON, ARRAY, String
+from typing import Optional, Dict, List
 
 from utils import DateUtil
 
@@ -65,14 +65,42 @@ class Case(db.Model):
 
     def to_dict(self) -> dict:
         return {
-            "id": self.id,
+            "id": self.cid,
             "user_id": self.uid,
             "project_id": self.pid,
             "case_detail": self.case_detail,
             "create_time": self.create_time, 
             "update_time": self.update_time, 
         }
+    
+class CasePointer(db.Model):
+    __tablename__ = 'case_pointer'
+    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    pid: str = db.Column(db.String(16), unique=False, nullable=False)
+    p_pointer: str = db.Column(db.String(16), unique=True, nullable=True)
+    c_pointer: str = db.Column(db.String(16), unique=True, nullable=False)
+    cid_array: ARRAY = db.Column(db.ARRAY(String(16), dimensions=1), unique=False, nullable=False)
+    create_time: datetime = db.Column(db.TIMESTAMP(timezone=True),
+                         nullable=False,
+                         default=DateUtil.now)
+    
+    def __init__(self, pid: str, p_pointer: str | None, c_pointer: str, cid_array: List[str]) -> None:
+        self.pid = pid
+        self.p_pointer = p_pointer # type: ignore
+        self.c_pointer = c_pointer
+        self.cid_array = cid_array # type: ignore
 
+    def __repr__(self) -> str:
+        return f"id: {self.id}, pid: {self.pid}, p_pointer: {self.p_pointer}, c_pointer: {self.c_pointer}, cid_array: {self.cid_array}, create_time: {self.create_time}"
+    
+    def to_dict(self) -> dict:
+        return {
+            "pid": self.pid,
+            "p_pointer": self.p_pointer,
+            "c_pointer": self.c_pointer,
+            "cid_array": self.cid_array,
+            "create_time": self.create_time,
+        }
 
 # class FuncCase(db.Model):
 #     __tablename__ = 'func_case'
